@@ -63,6 +63,6 @@ suit = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.111376)
 mesh = SubResource("BoxMesh_g1lkx")
 
-[connection signal="card_clicked" from="Table/DragController/TableCards" to="Table" method="OnTableCardsCardClicked"]
-[connection signal="card_clicked" from="Table/DragController/Hand" to="Table" method="OnHandCardClicked"]
-[connection signal="card_3d_mouse_up" from="Deck" to="Table" method="OnFaceCard3DCard3DMouseUp"]
+[connection signal="CardClicked" from="Table/DragController/TableCards" to="Table" method="OnTableCardsCardClicked"]
+[connection signal="CardClicked" from="Table/DragController/Hand" to="Table" method="OnHandCardClicked"]
+[connection signal="Card3DMouseUp" from="Deck" to="Table" method="OnFaceCard3DCard3DMouseUp"]

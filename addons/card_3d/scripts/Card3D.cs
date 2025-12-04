@@ -72,7 +72,7 @@ public partial class Card3D : Node3D
 
 		_hoverTween = CreateTween();
 		_hoverTween.SetParallel(true);
-		_hoverTween.SetEase(Tween.EaseType.EaseIn);
+		_hoverTween.SetEase(Tween.EaseType.In);
 		TweenCardScale(HoverScaleFactor);
 		TweenMeshPosition(HoverPosMove, MoveTweenDuration);
 	}
@@ -86,7 +86,7 @@ public partial class Card3D : Node3D
 
 		_hoverTween = CreateTween();
 		_hoverTween.SetParallel(true);
-		_hoverTween.SetEase(Tween.EaseType.EaseIn);
+		_hoverTween.SetEase(Tween.EaseType.In);
 		TweenCardScale(1.0f);
 		TweenMeshPosition(Vector3.Zero, MoveTweenDuration);
 	}
@@ -117,7 +117,7 @@ public partial class Card3D : Node3D
 		// Set z to prevent transition spring from making card go below another card
 		Position = new Vector3(Position.X, Position.Y, newPosition.Z);
 		_positionTween = CreateTween();
-		_positionTween.SetEase(Tween.EaseType.EaseOut);
+		_positionTween.SetEase(Tween.EaseType.Out);
 		_positionTween.SetTrans(Tween.TransitionType.Spring);
 		TweenCardPosition(newPosition, duration);
 		return _positionTween;
@@ -142,7 +142,7 @@ public partial class Card3D : Node3D
 
 	private void TweenCardRotation(Vector3 targetRotation, float duration)
 	{
-		_rotateTween.SetEase(Tween.EaseType.EaseIn);
+		_rotateTween.SetEase(Tween.EaseType.In);
 		_rotateTween.TweenProperty(this, "rotation", targetRotation, duration);
 	}
 

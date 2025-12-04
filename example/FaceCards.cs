@@ -58,12 +58,12 @@ public partial class FaceCards : Resource
 		{
 			foreach (Rank rank in System.Enum.GetValues(typeof(Rank)))
 			{
-				var frontMaterial = "res://example/materials/" + suit.ToString().ToLower() + "-" + rank.ToString() + ".tres";
+				var frontMaterial = "res://example/materials/" + suit.ToString().ToLower() + "-" + ((int)rank).ToString() + ".tres";
 				var backMaterial = "res://example/materials/card-back.tres";
 				var cardData = new Dictionary
 				{
-					{ "rank", rank },
-					{ "suit", suit },
+					{ "rank", (int)rank },
+					{ "suit", (int)suit },
 					{ "front_material_path", frontMaterial },
 					{ "back_material_path", backMaterial }
 				};

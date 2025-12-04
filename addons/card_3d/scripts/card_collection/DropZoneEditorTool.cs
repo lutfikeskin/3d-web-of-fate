@@ -71,4 +71,3 @@ public partial class DropZoneEditorTool : Node
 		);
 	}
 }
-

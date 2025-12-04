@@ -16,12 +16,12 @@ public partial class FaceCard3D : Card3D
 			{
 				if (_data.ContainsKey("rank"))
 				{
-					Rank = (FaceCards.Rank)_data["rank"];
+					Rank = (FaceCards.Rank)(int)_data["rank"].AsInt32();
 				}
 
 				if (_data.ContainsKey("suit"))
 				{
-					Suit = (FaceCards.Suit)_data["suit"];
+					Suit = (FaceCards.Suit)(int)_data["suit"].AsInt32();
 				}
 
 				if (_data.ContainsKey("front_material_path"))

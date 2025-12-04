@@ -415,4 +415,3 @@ public partial class CardCollection3D : Node3D
 		return _dragStrategy.CanInsertCard(card, this, fromCollection);
 	}
 }
-

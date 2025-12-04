@@ -66,8 +66,8 @@ public partial class Table : Node3D
 		var scene = GD.Load<PackedScene>("res://example/face_card_3d.tscn");
 		var faceCard3D = scene.Instantiate<FaceCard3D>();
 		var cardData = _cardDatabase.GetCardData(rank, suit);
-		faceCard3D.Rank = (FaceCards.Rank)cardData["rank"];
-		faceCard3D.Suit = (FaceCards.Suit)cardData["suit"];
+		faceCard3D.Rank = (FaceCards.Rank)(int)cardData["rank"].AsInt32();
+		faceCard3D.Suit = (FaceCards.Suit)(int)cardData["suit"].AsInt32();
 		faceCard3D.FrontMaterialPath = (string)cardData["front_material_path"];
 		faceCard3D.BackMaterialPath = (string)cardData["back_material_path"];
 
@@ -77,7 +77,7 @@ public partial class Table : Node3D
 	private void AddCard()
 	{
 		var data = NextCard();
-		var card = InstantiateFaceCard((FaceCards.Rank)data["rank"], (FaceCards.Suit)data["suit"]);
+		var card = InstantiateFaceCard((FaceCards.Rank)(int)data["rank"].AsInt32(), (FaceCards.Suit)(int)data["suit"].AsInt32());
 		_hand.AppendCard(card);
 		var deck = GetNode<Node3D>("../Deck");
 		card.GlobalPosition = deck.GlobalPosition;
@@ -103,7 +103,7 @@ public partial class Table : Node3D
 
 		return new Dictionary
 		{
-			{ "suit", suit },
+			{ "suit", (int)suit },
 			{ "rank", rank }
 		};
 	}

@@ -307,10 +307,16 @@ public partial class DragController : Node3D
 			_camera.ProjectRayOrigin(_currentMousePosition),
 			_camera.ProjectRayNormal(_currentMousePosition)
 		);
+		
+		if (position3D == null)
+		{
+			return;
+		}
+		
 		var cardPosition = _draggingCard.GlobalPosition;
 
-		var xDistance = position3D.X - cardPosition.X;
-		var yDistance = position3D.Y - cardPosition.Y;
+		var xDistance = position3D.Value.X - cardPosition.X;
+		var yDistance = position3D.Value.Y - cardPosition.Y;
 
 		// Add rotation to make dragging cards pretty
 		// Rotate around y axis for horizontal rotation
@@ -333,9 +339,9 @@ public partial class DragController : Node3D
 		_draggingCard.DraggingRotation(targetRotation);
 
 		// Set card position to under mouse
-		_draggingCard.GlobalPosition = new Vector3(position3D.X, position3D.Y, position3D.Z);
+		_draggingCard.GlobalPosition = new Vector3(position3D.Value.X, position3D.Value.Y, position3D.Value.Z);
 
-		if (_hoveredCollection != null && position3D != Vector3.Zero && _hoveredCollection.CanReorderCard(_draggingCard))
+		if (_hoveredCollection != null && position3D != null && _hoveredCollection.CanReorderCard(_draggingCard))
 		{
 			var index = GetHoveredCollectionIndexAtMousePos(_currentMousePosition);
 			_hoveredCollection.PreviewCardDrop(_draggingCard, index);
@@ -352,12 +358,12 @@ public partial class DragController : Node3D
 			_camera.ProjectRayNormal(mousePos)
 		);
 
-		if (collectionPlaneIntersection == Vector3.Zero)
+		if (collectionPlaneIntersection == null)
 		{
 			return _hoveredCollection.Cards.Count;
 		}
 
-		var offset = collectionPlaneIntersection - _hoveredCollection.GlobalPosition;
+		var offset = collectionPlaneIntersection.Value - _hoveredCollection.GlobalPosition;
 		var distanceAlongLayout = offset.Dot(_hoveredCollectionLayoutDirection);
 		return _hoveredCollection.GetClosestCardIndexAlongVector(_hoveredCollectionLayoutDirection, distanceAlongLayout);
 	}
