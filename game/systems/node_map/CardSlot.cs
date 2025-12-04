@@ -162,13 +162,7 @@ public partial class CardSlot : Node3D
 		
 		// Kartın mevcut parent'ını al
 		var currentParent = card.GetParent();
-		
-		// ÖNEMLİ: Kartın mevcut global pozisyonunu parent değiştirmeden ÖNCE al
-		Vector3 cardCurrentGlobalPos = card.IsInsideTree() ? card.GlobalPosition : Vector3.Zero;
 		Vector3 cardScale = card.IsInsideTree() ? card.Scale : Vector3.One;
-		
-		// Slot'un hedef global position'ı (tam yüzeyde)
-		var targetGlobalPosition = GlobalPosition;
 		
 		// Kartı slot'un child'ı yap
 		if (currentParent != this)
@@ -183,27 +177,24 @@ public partial class CardSlot : Node3D
 			AddChild(card);
 			card.Visible = true;
 			card.Scale = cardScale;
-			
-			// Kartı slot/table düzlemine paralel, yüzü yukarı bakacak şekilde düz yatır
-			// Slot'un global basis'ini alıp X ekseninde -90° döndürerek kullan
-			var flatBasis = GlobalBasis * new Basis(Vector3.Right, -Mathf.Pi * 0.5f);
-			card.GlobalBasis = flatBasis;
-			
-			// Kartın mevcut pozisyonunu koru (animasyon elinden başlasın)
-			if (cardCurrentGlobalPos != Vector3.Zero)
-			{
-				card.Position = ToLocal(cardCurrentGlobalPos);
-			}
 		}
 		
-		// Hedef pozisyonu local'a çevir
-		var targetLocalPosition = ToLocal(targetGlobalPosition);
+		// ÖNEMLİ: Kartın pozisyonunu kesin olarak slot merkezine al
+		// Hand'den çıkarılırken layout animasyonu kartın pozisyonunu etkilememeli
+		// Bu yüzden pozisyonu hem hemen hem de bir sonraki frame'de set ediyoruz
 		
-		// Kartı slot'a animasyonlu olarak yerleştir (daha sakin, zıplamasız)
-		var tween = card.CreateTween();
-		tween.SetEase(Tween.EaseType.Out);
-		tween.SetTrans(Tween.TransitionType.Cubic);
-		tween.TweenProperty(card, "position", targetLocalPosition, 0.25f);
+		// Tüm aktif tween'leri durdur (hand layout animasyonları kartı etkilemesin)
+		card.StopAllTweens();
+		
+		// Pozisyonu kesin olarak slot merkezine al
+		card.Position = Vector3.Zero;
+		
+		// Slot düzlemine paralel, yüzü yukarı bakacak şekilde düz yatır
+		var flatBasis = Basis * new Basis(Vector3.Right, -Mathf.Pi * 0.5f);
+		card.Basis = flatBasis;
+		
+		// Bir sonraki frame'de pozisyonu tekrar kontrol et ve düzelt
+		CallDeferred(MethodName.EnsureCardPosition, card);
 		
 		// Kart state: bulunduğu slot bilgisini kart'a yaz
 		card.SetMeta("slot", this);
@@ -211,6 +202,30 @@ public partial class CardSlot : Node3D
 		
 		EmitSignal(SignalName.CardPlaced, card);
 		return true;
+	}
+	
+	private void EnsureCardPosition(Card3D card)
+	{
+		// Eğer kart hala bu slot'taysa, pozisyonunu kesin olarak merkeze al
+		if (card != null && card.GetParent() == this && card.HasMeta("in_slot"))
+		{
+			// Pozisyonu kesin olarak Vector3.Zero yap
+			card.Position = Vector3.Zero;
+			
+			// Rotasyonu da kesin olarak ayarla
+			var flatBasis = Basis * new Basis(Vector3.Right, -Mathf.Pi * 0.5f);
+			card.Basis = flatBasis;
+			
+			// Global pozisyonu da kontrol et ve düzelt (eğer hala yanlışsa)
+			// Kart slot'un child'ı olduğu için global pozisyon slot'un global pozisyonu olmalı
+			var expectedGlobalPos = GlobalPosition;
+			var actualGlobalPos = card.GlobalPosition;
+			if (actualGlobalPos.DistanceTo(expectedGlobalPos) > 0.01f)
+			{
+				// Global pozisyon yanlışsa, local pozisyonu tekrar sıfırla
+				card.Position = Vector3.Zero;
+			}
+		}
 	}
 
 	public Card3D RemoveCard()

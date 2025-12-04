@@ -220,14 +220,15 @@ public partial class Table : Node3D
 				slotWithCard.RemoveCard();
 			}
 			
-			// Hand'den çıkar (eğer hand'deyse)
+			// Hand'den çıkar (eğer hand'deyse) - ÖNCE hand'den çıkar
+			// Böylece hand'in layout animasyonu başlamadan kart slot'a gider
 			if (_hand != null && _hand.CardIndicies.ContainsKey(card))
 			{
 				var cardIndex = _hand.CardIndicies[card];
 				_hand.RemoveCard(cardIndex);
 			}
 			
-			// Slot'a yerleştir
+			// Slot'a yerleştir - hand'den çıktıktan SONRA
 			nearestSlot.PlaceCard(card);
 		}
 		else if (slotWithCard != null)
@@ -381,11 +382,15 @@ public partial class Table : Node3D
 			_hand.AppendCard(card);
 		}
 		
-		// Hand'e döndükten sonra (artık tree'de) rotasyonu sıfırla
+		// Hand'e döndükten sonra dik dursun (tree'ye girdiyse)
 		if (card.IsInsideTree())
 		{
-			card.Rotation = Vector3.Zero;
 			card.GlobalBasis = Basis.Identity;
+		}
+		else
+		{
+			// İçinde değilse deferred ayarla
+			card.CallDeferred("set", "global_basis", Basis.Identity);
 		}
 		
 		card.RemoveHovered();

@@ -45,7 +45,7 @@ script = ExtResource("1_trlmi")
 metadata/_edit_lock_ = true
 
 [node name="Slots" type="Node3D" parent="Table"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 2.1942422, 0.13300729)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.05, 0.6158755)
 
 [node name="Slot_0" type="Node3D" parent="Table/Slots"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 3)
