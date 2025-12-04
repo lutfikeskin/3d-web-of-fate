@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://dxpc2iac0hjpw"]
 
-[ext_resource type="Script" uid="uid://d4d3temlx3l6a" path="res://addons/card_3d/scripts/card_3d.gd" id="1_ll0aq"]
+[ext_resource type="Script" path="res://addons/card_3d/scripts/Card3D.cs" id="1_ll0aq"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_a5dw2"]
 size = Vector2(2.5, 3.5)
@@ -32,6 +32,6 @@ skeleton = NodePath("../..")
 transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0)
 shape = SubResource("ConvexPolygonShape3D_21kd5")
 
-[connection signal="input_event" from="StaticBody3D" to="." method="_on_static_body_3d_input_event"]
-[connection signal="mouse_entered" from="StaticBody3D" to="." method="_on_static_body_3d_mouse_entered"]
-[connection signal="mouse_exited" from="StaticBody3D" to="." method="_on_static_body_3d_mouse_exited"]
+[connection signal="input_event" from="StaticBody3D" to="." method="OnStaticBody3DInputEvent"]
+[connection signal="mouse_entered" from="StaticBody3D" to="." method="OnStaticBody3DMouseEntered"]
+[connection signal="mouse_exited" from="StaticBody3D" to="." method="OnStaticBody3DMouseExited"]

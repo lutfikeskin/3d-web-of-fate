@@ -1,10 +1,10 @@
 [gd_scene load_steps=12 format=3 uid="uid://usdfp6fqxnev"]
 
-[ext_resource type="Script" uid="uid://dofuby1qe2xj4" path="res://example/table.gd" id="1_trlmi"]
-[ext_resource type="Script" uid="uid://bgkontnk0cnl" path="res://addons/card_3d/scripts/drag_controller.gd" id="2_07uyt"]
+[ext_resource type="Script" path="res://example/Table.cs" id="1_trlmi"]
+[ext_resource type="Script" path="res://addons/card_3d/scripts/DragController.cs" id="2_07uyt"]
 [ext_resource type="PackedScene" uid="uid://d1uvcisduvvj" path="res://addons/card_3d/scenes/card_collection_3d.tscn" id="3_pqjp5"]
-[ext_resource type="Script" uid="uid://dk8dsc1jau1rh" path="res://addons/card_3d/scripts/card_layouts/line_card_layout.gd" id="4_t7f8m"]
-[ext_resource type="Script" uid="uid://7sguf1kjbe8s" path="res://addons/card_3d/scripts/card_layouts/fan_card_layout.gd" id="5_rd2gk"]
+[ext_resource type="Script" path="res://addons/card_3d/scripts/card_layouts/LineCardLayout.cs" id="4_t7f8m"]
+[ext_resource type="Script" path="res://addons/card_3d/scripts/card_layouts/FanCardLayout.cs" id="5_rd2gk"]
 [ext_resource type="PackedScene" uid="uid://bjx4ugu14qx3w" path="res://example/face_card_3d.tscn" id="6_qtugc"]
 
 [sub_resource type="Resource" id="Resource_yq80r"]
@@ -63,6 +63,6 @@ suit = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.111376)
 mesh = SubResource("BoxMesh_g1lkx")
 
-[connection signal="card_clicked" from="Table/DragController/TableCards" to="Table" method="_on_table_cards_card_clicked"]
-[connection signal="card_clicked" from="Table/DragController/Hand" to="Table" method="_on_hand_card_clicked"]
-[connection signal="card_3d_mouse_up" from="Deck" to="Table" method="_on_face_card_3d_card_3d_mouse_up"]
+[connection signal="card_clicked" from="Table/DragController/TableCards" to="Table" method="OnTableCardsCardClicked"]
+[connection signal="card_clicked" from="Table/DragController/Hand" to="Table" method="OnHandCardClicked"]
+[connection signal="card_3d_mouse_up" from="Deck" to="Table" method="OnFaceCard3DCard3DMouseUp"]
