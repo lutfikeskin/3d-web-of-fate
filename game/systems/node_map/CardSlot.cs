@@ -22,6 +22,9 @@ public partial class CardSlot : Node3D
 	[Export]
 	public ThreadType Thread { get; set; } = ThreadType.Silk;  // MVP için varsayılan İpek İplik
 
+	[Export]
+	public ThreadConfig ThreadConfiguration { get; set; }  // Thread konfigürasyonu (opsiyonel)
+
 	private Card3D _placedCard;
 	private MeshInstance3D _slotVisual;
 	private Area3D _dropArea;
@@ -29,6 +32,12 @@ public partial class CardSlot : Node3D
 
 	public override void _Ready()
 	{
+		// ThreadConfig yüklenmemişse, Thread tipine göre otomatik yükle
+		if (ThreadConfiguration == null)
+		{
+			LoadThreadConfigByType();
+		}
+		
 		// Scene'deki mesh'i al veya oluştur
 		_slotVisual = GetNodeOrNull<MeshInstance3D>("SlotVisual");
 		if (_slotVisual == null)
@@ -57,8 +66,18 @@ public partial class CardSlot : Node3D
 			_slotMaterial.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
 			_slotMaterial.EmissionEnabled = true;
 			_slotMaterial.CullMode = BaseMaterial3D.CullModeEnum.Disabled;
-			_slotMaterial.AlbedoColor = new Color(0.3f, 0.5f, 0.8f, 0.6f);
-			_slotMaterial.Emission = new Color(0.1f, 0.3f, 0.6f, 1.0f);
+			
+			// ThreadConfig'den renk al, yoksa varsayılan
+			if (ThreadConfiguration != null)
+			{
+				_slotMaterial.AlbedoColor = ThreadConfiguration.ThreadColor;
+				_slotMaterial.Emission = ThreadConfiguration.ThreadColor;
+			}
+			else
+			{
+				_slotMaterial.AlbedoColor = new Color(0.3f, 0.5f, 0.8f, 0.6f);
+				_slotMaterial.Emission = new Color(0.1f, 0.3f, 0.6f, 1.0f);
+			}
 		}
 		
 		_slotVisual.MaterialOverride = _slotMaterial;
@@ -307,5 +326,28 @@ public partial class CardSlot : Node3D
 		// Slot'un global pozisyonuna göre mesafe kontrolü
 		float distance = GlobalPosition.DistanceTo(globalPosition);
 		return distance < 2.5f; // Slot yarıçapı
+	}
+
+	private void LoadThreadConfigByType()
+	{
+		// Thread tipine göre otomatik ThreadConfig yükle
+		string threadPath = Thread switch
+		{
+			ThreadType.Silk => "res://data/threads/silk_thread.tres",
+			ThreadType.Blood => "res://data/threads/blood_thread.tres",
+			ThreadType.Gold => "res://data/threads/gold_thread.tres",
+			ThreadType.Shadow => "res://data/threads/shadow_thread.tres",
+			_ => "res://data/threads/silk_thread.tres"
+		};
+
+		if (ResourceLoader.Exists(threadPath))
+		{
+			ThreadConfiguration = GD.Load<ThreadConfig>(threadPath);
+		}
+	}
+
+	public ThreadConfig GetThreadConfig()
+	{
+		return ThreadConfiguration;
 	}
 }

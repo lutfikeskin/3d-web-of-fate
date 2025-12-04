@@ -49,4 +49,3 @@ public partial class FateCard3D : Card3D
 		return _cardData != null ? _cardData.CardName : "Unknown Card";
 	}
 }
-

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/systems/cards/CardData.cs" id="1_carddata"]
+
+[resource]
+script = ExtResource("1_carddata")
+CardName = "Kızıl Ay"
+Tag = 0
+Category = 4
+BaseDP = 0
+BaseChaos = 30
+Description = "Tüm Vahşet kartlarının Kaos üretimini 2 katına çıkarır."
+SynergyDescription = "Kurtadam ile bağlıysa kontrol edilemez güç yaratır; DP +150, Kaos +100."
+ArtPath = ""
+

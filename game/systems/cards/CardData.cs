@@ -58,4 +58,3 @@ public partial class CardData : Resource
 		Description = description;
 	}
 }
-

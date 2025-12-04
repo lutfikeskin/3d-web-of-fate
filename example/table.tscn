@@ -1,11 +1,15 @@
-[gd_scene load_steps=12 format=3 uid="uid://usdfp6fqxnev"]
+[gd_scene load_steps=21 format=3 uid="uid://usdfp6fqxnev"]
 
 [ext_resource type="Script" uid="uid://d2weyrqhqx4ht" path="res://example/Table.cs" id="1_trlmi"]
 [ext_resource type="Script" uid="uid://c22a1qkichiow" path="res://addons/card_3d/scripts/DragController.cs" id="2_07uyt"]
-[ext_resource type="PackedScene" uid="uid://d1uvcisduvvj" path="res://addons/card_3d/scenes/card_collection_3d.tscn" id="3_pqjp5"]
-[ext_resource type="PackedScene" uid="uid://bjx4ugu14qx3w" path="res://example/face_card_3d.tscn" id="6_qtugc"]
+[ext_resource type="Script" uid="uid://c1ocwjfl31o82" path="res://addons/card_3d/scripts/card_collection/CardCollection3D.cs" id="4_w86u8"]
+[ext_resource type="Shape3D" uid="uid://cicwtlugivwj4" path="res://addons/card_3d/shapes_3d/default_card_collection_3d_drop_zone_shape_3d.tres" id="5_sbsk4"]
+[ext_resource type="Script" uid="uid://ul4bmpjekl7" path="res://addons/card_3d/scripts/card_collection/DropZoneEditorTool.cs" id="6_podeb"]
+[ext_resource type="Script" uid="uid://ebrkqm3f3f86" path="res://game/systems/cards/FateCard3D.cs" id="7_sbsk4"]
 [ext_resource type="Script" uid="uid://bid8ltj2ks5hc" path="res://game/systems/node_map/CardSlot.cs" id="7_slot"]
-[ext_resource type="Script" path="res://example/GameHUD.cs" id="8_hud"]
+[ext_resource type="Script" uid="uid://hoqpa5lwbak3" path="res://example/GameHUD.cs" id="8_hud"]
+[ext_resource type="Material" uid="uid://drikh8gb0pvmj" path="res://example/materials/card-back.tres" id="8_if48w"]
+[ext_resource type="Script" uid="uid://ctva4frq03db0" path="res://game/systems/cards/CardData.cs" id="8_podeb"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot"]
 transparency = 1
@@ -24,6 +28,19 @@ size = Vector2(40, 20)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_glsqp"]
 albedo_color = Color(0.207843, 0.396078, 0.301961, 1)
+
+[sub_resource type="Resource" id="Resource_sbsk4"]
+script = ExtResource("8_podeb")
+metadata/_custom_type_script = "uid://ctva4frq03db0"
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_a5dw2"]
+size = Vector2(2.5, 3.5)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_o3bng"]
+size = Vector2(2.5, 3.5)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_21kd5"]
+points = PackedVector3Array(-1.25, 1.75, 0, -1.25, -1.75, 0, 1.25, -1.75, 0, 1.25, 1.75, 0)
 
 [sub_resource type="BoxMesh" id="BoxMesh_g1lkx"]
 size = Vector3(2.5, 3.5, 0.2)
@@ -136,8 +153,22 @@ debug_color = Color(7.70092e-06, 0.7359137, 0.85903156, 0.41960785)
 [node name="DragController" type="Node3D" parent="Table"]
 script = ExtResource("2_07uyt")
 
-[node name="Hand" parent="Table/DragController" instance=ExtResource("3_pqjp5")]
+[node name="Hand" type="Node3D" parent="Table/DragController"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 0.5)
+script = ExtResource("4_w86u8")
+
+[node name="DropZone" type="StaticBody3D" parent="Table/DragController/Hand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Table/DragController/Hand/DropZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.6)
+shape = ExtResource("5_sbsk4")
+disabled = true
+debug_color = Color(10.370252, 17.201862, 18.892157, 1)
+
+[node name="DropZoneEditorTool" type="Node" parent="Table/DragController/Hand"]
+script = ExtResource("6_podeb")
 
 [node name="TableSurface" type="MeshInstance3D" parent="Table"]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, -1)
@@ -145,31 +176,44 @@ mesh = SubResource("PlaneMesh_gv0to")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_glsqp")
 
-[node name="Deck" parent="." instance=ExtResource("6_qtugc")]
+[node name="Deck" type="Node3D" parent="."]
 transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, -13.484321, -5.3105974, -0.686903)
-Data = {}
-Rank = 2
-Suit = 1
-FrontMaterialPath = ""
-BackMaterialPath = ""
+script = ExtResource("7_sbsk4")
+CardData = SubResource("Resource_sbsk4")
+
+[node name="CardMesh" type="Node3D" parent="Deck"]
+
+[node name="CardBackMesh" type="MeshInstance3D" parent="Deck/CardMesh"]
+transform = Transform3D(-1, -8.74228e-08, -4.37114e-08, 4.37114e-08, 1.91069e-15, -1, 8.74228e-08, -1, 1.91069e-15, 0, 0, 0)
+material_override = ExtResource("8_if48w")
+mesh = SubResource("PlaneMesh_a5dw2")
+skeleton = NodePath("../..")
+
+[node name="CardFrontMesh" type="MeshInstance3D" parent="Deck/CardMesh"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("PlaneMesh_o3bng")
+skeleton = NodePath("../..")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Deck"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Deck/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0)
+shape = SubResource("ConvexPolygonShape3D_21kd5")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Deck"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.111376)
 mesh = SubResource("BoxMesh_g1lkx")
 
 [node name="GameHUD" type="Control" parent="."]
-mouse_filter = 2
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("8_hud")
 GameStatePath = NodePath("Table/GameState")
-DPLabelPath = NodePath("VBoxContainer/DPContainer/DPLabel")
-ChaosLabelPath = NodePath("VBoxContainer/ChaosContainer/ChaosTitleContainer/ChaosLabel")
-ChaosBarPath = NodePath("VBoxContainer/ChaosContainer/ChaosBar")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="GameHUD"]
 layout_mode = 1
@@ -187,14 +231,14 @@ layout_mode = 2
 
 [node name="DPTitle" type="Label" parent="GameHUD/VBoxContainer/DPContainer"]
 layout_mode = 2
-text = "DP:"
 theme_override_font_sizes/font_size = 24
+text = "DP:"
 
 [node name="DPLabel" type="Label" parent="GameHUD/VBoxContainer/DPContainer"]
 layout_mode = 2
-text = "0"
-theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 24
+text = "0"
 
 [node name="ChaosContainer" type="VBoxContainer" parent="GameHUD/VBoxContainer"]
 layout_mode = 2
@@ -205,19 +249,23 @@ layout_mode = 2
 
 [node name="ChaosTitle" type="Label" parent="GameHUD/VBoxContainer/ChaosContainer/ChaosTitleContainer"]
 layout_mode = 2
-text = "Kaos:"
 theme_override_font_sizes/font_size = 20
+text = "Kaos:"
 
 [node name="ChaosLabel" type="Label" parent="GameHUD/VBoxContainer/ChaosContainer/ChaosTitleContainer"]
 layout_mode = 2
-text = "0/100"
-theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 20
+text = "0/100"
 
 [node name="ChaosBar" type="ProgressBar" parent="GameHUD/VBoxContainer/ChaosContainer"]
-layout_mode = 2
 custom_minimum_size = Vector2(200, 30)
-max_value = 100.0
+layout_mode = 2
 
 [connection signal="CardClicked" from="Table/DragController/Hand" to="Table" method="OnHandCardClicked"]
+[connection signal="mouse_entered" from="Table/DragController/Hand/DropZone" to="Table/DragController/Hand" method="OnDropZoneMouseEntered"]
+[connection signal="mouse_exited" from="Table/DragController/Hand/DropZone" to="Table/DragController/Hand" method="OnDropZoneMouseExited"]
 [connection signal="Card3DMouseUp" from="Deck" to="Table" method="OnFaceCard3DCard3DMouseUp"]
+[connection signal="input_event" from="Deck/StaticBody3D" to="Deck" method="OnStaticBody3DInputEvent"]
+[connection signal="mouse_entered" from="Deck/StaticBody3D" to="Deck" method="OnStaticBody3DMouseEntered"]
+[connection signal="mouse_exited" from="Deck/StaticBody3D" to="Deck" method="OnStaticBody3DMouseExited"]

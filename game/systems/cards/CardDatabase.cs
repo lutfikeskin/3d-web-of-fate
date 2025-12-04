@@ -8,138 +8,185 @@ public partial class CardDatabase : Node
 	private Array<CardData> _allCards = new Array<CardData>();
 
 	[Export]
-	public string CardsJsonPath { get; set; } = "res://data/cards/cards.json";
+	public Array<CardData> Cards { get; set; } = new Array<CardData>();
 
 	public override void _Ready()
 	{
-		LoadCardsFromJson();
+		LoadCardsFromResources();
 	}
 
-	public void LoadCardsFromJson()
+	private void LoadCardsFromResources()
 	{
 		_cards.Clear();
 		_allCards.Clear();
 
-		if (!FileAccess.FileExists(CardsJsonPath))
+		GD.Print("CardDatabase: Starting to load cards...");
+
+		// Önce editor'de atanan kartları yükle
+		if (Cards != null && Cards.Count > 0)
 		{
-			GD.PrintErr($"Card database JSON file not found: {CardsJsonPath}");
-			return;
-		}
-
-		var file = FileAccess.Open(CardsJsonPath, FileAccess.ModeFlags.Read);
-		if (file == null)
-		{
-			GD.PrintErr($"Failed to open card database file: {CardsJsonPath}");
-			return;
-		}
-
-		var jsonString = file.GetAsText();
-		file.Close();
-
-		var json = new Json();
-		var parseResult = json.Parse(jsonString);
-
-		if (parseResult != Error.Ok)
-		{
-			GD.PrintErr($"Failed to parse JSON: {parseResult}");
-			return;
-		}
-
-		var jsonData = json.Data.AsGodotDictionary();
-		
-		if (!jsonData.ContainsKey("cards"))
-		{
-			GD.PrintErr("JSON file missing 'cards' key");
-			return;
-		}
-
-		var cardsArray = jsonData["cards"].AsGodotArray();
-		
-		foreach (var cardObj in cardsArray)
-		{
-			var cardDict = cardObj.AsGodotDictionary();
-			var cardData = ParseCardFromDictionary(cardDict);
-			
-			if (cardData != null)
+			GD.Print($"CardDatabase: Found {Cards.Count} cards in editor assignment");
+			foreach (var cardData in Cards)
 			{
-				_cards[cardData.CardName] = cardData;
-				_allCards.Add(cardData);
+				if (cardData != null && !string.IsNullOrEmpty(cardData.CardName))
+				{
+					_cards[cardData.CardName] = cardData;
+					_allCards.Add(cardData);
+				}
 			}
+			GD.Print($"CardDatabase: Loaded {_cards.Count} cards from editor assignment");
+		}
+		else
+		{
+			GD.Print("CardDatabase: No cards in editor assignment, loading from manual list...");
 		}
 
-		GD.Print($"Loaded {_cards.Count} cards from database");
+		// Her zaman manuel listeden de yükle (editor'de atanmış olsa bile, eksik kartlar için)
+		LoadCardsFromManualList();
+		
+		// Eğer hala kart yoksa, dizinden yüklemeyi dene
+		if (_cards.Count == 0)
+		{
+			GD.Print("CardDatabase: No cards loaded from manual list, trying directory scan...");
+			LoadCardsFromDirectory("res://data/cards");
+		}
+
+		if (_cards.Count == 0)
+		{
+			GD.PrintErr("CardDatabase: No cards loaded! Check data/cards directory or assign cards in inspector.");
+		}
+		else
+		{
+			GD.Print($"CardDatabase: Total {_cards.Count} cards loaded");
+		}
 	}
 
-	private CardData ParseCardFromDictionary(Dictionary cardDict)
+	private void LoadCardsFromDirectory(string directoryPath)
 	{
-		try
+		var dir = DirAccess.Open(directoryPath);
+		if (dir == null)
 		{
-			var cardData = new CardData();
-			
-			if (cardDict.ContainsKey("name"))
-			{
-				cardData.CardName = cardDict["name"].AsString();
-			}
-			
-			if (cardDict.ContainsKey("tag"))
-			{
-				var tagStr = cardDict["tag"].AsString().ToLower();
-				cardData.Tag = tagStr switch
-				{
-					"violence" => CardData.CardTag.Violence,
-					"mystic" => CardData.CardTag.Mystic,
-					"hope" => CardData.CardTag.Hope,
-					"tragedy" => CardData.CardTag.Tragedy,
-					_ => CardData.CardTag.Violence
-				};
-			}
-			
-			if (cardDict.ContainsKey("category"))
-			{
-				var categoryStr = cardDict["category"].AsString().ToLower();
-				cardData.Category = categoryStr switch
-				{
-					"character" => CardData.CardCategory.Character,
-					"item" => CardData.CardCategory.Item,
-					"event" => CardData.CardCategory.Event,
-					"location" => CardData.CardCategory.Location,
-					"disaster" => CardData.CardCategory.Disaster,
-					_ => CardData.CardCategory.Character
-				};
-			}
-			
-			if (cardDict.ContainsKey("dp"))
-			{
-				cardData.BaseDP = cardDict["dp"].AsInt32();
-			}
-			
-			if (cardDict.ContainsKey("chaos"))
-			{
-				cardData.BaseChaos = cardDict["chaos"].AsInt32();
-			}
-			
-			if (cardDict.ContainsKey("description"))
-			{
-				cardData.Description = cardDict["description"].AsString();
-			}
-			
-			if (cardDict.ContainsKey("synergy"))
-			{
-				cardData.SynergyDescription = cardDict["synergy"].AsString();
-			}
-			
-			if (cardDict.ContainsKey("art_path"))
-			{
-				cardData.ArtPath = cardDict["art_path"].AsString();
-			}
-			
-			return cardData;
+			GD.PrintErr($"CardDatabase: Failed to open directory {directoryPath}");
+			// Fallback: Manuel dosya listesi
+			LoadCardsFromManualList();
+			return;
 		}
-		catch (System.Exception e)
+
+		var files = dir.GetFiles();
+		GD.Print($"CardDatabase: Found {files.Length} files in {directoryPath}");
+
+		foreach (var fileName in files)
 		{
-			GD.PrintErr($"Error parsing card: {e.Message}");
-			return null;
+			if (fileName.EndsWith(".tres"))
+			{
+				var filePath = $"{directoryPath}/{fileName}";
+				GD.Print($"CardDatabase: Loading {filePath}");
+				
+				if (!ResourceLoader.Exists(filePath))
+				{
+					GD.PrintErr($"CardDatabase: File does not exist: {filePath}");
+					continue;
+				}
+
+				// ResourceLoader.Load() kullan (GD.Load yerine)
+				var resource = ResourceLoader.Load(filePath);
+				if (resource == null)
+				{
+					GD.PrintErr($"CardDatabase: ResourceLoader.Load returned null for {filePath}");
+					continue;
+				}
+
+				var cardData = resource as CardData;
+				if (cardData == null)
+				{
+					GD.PrintErr($"CardDatabase: Resource is not CardData type for {filePath}, got {resource.GetType().Name}");
+					continue;
+				}
+				
+				if (!string.IsNullOrEmpty(cardData.CardName))
+				{
+					if (!_cards.ContainsKey(cardData.CardName))
+					{
+						_cards[cardData.CardName] = cardData;
+						_allCards.Add(cardData);
+						GD.Print($"CardDatabase: Loaded card '{cardData.CardName}' from {fileName}");
+					}
+					else
+					{
+						GD.Print($"CardDatabase: Duplicate card name '{cardData.CardName}' found in {fileName}");
+					}
+				}
+				else
+				{
+					GD.PrintErr($"CardDatabase: CardData has no name from {fileName}");
+				}
+			}
 		}
+	}
+
+	private void LoadCardsFromManualList()
+	{
+		// Manuel dosya listesi - en güvenilir yöntem
+		var cardFiles = new string[]
+		{
+			"res://data/cards/acemi_kahraman.tres",
+			"res://data/cards/yasak_ask.tres",
+			"res://data/cards/kanli_baron.tres",
+			"res://data/cards/gizemli_rehber.tres",
+			"res://data/cards/efsanevi_kilic.tres",
+			"res://data/cards/buyukanne_kurabiyesi.tres",
+			"res://data/cards/karanlik_orman.tres",
+			"res://data/cards/kizil_ay.tres"
+		};
+
+		GD.Print($"CardDatabase: Loading cards from manual list...");
+		int loadedCount = 0;
+
+		foreach (var filePath in cardFiles)
+		{
+			if (ResourceLoader.Exists(filePath))
+			{
+				// ResourceLoader.Load() kullan (GD.Load yerine)
+				var resource = ResourceLoader.Load(filePath);
+				if (resource == null)
+				{
+					GD.PrintErr($"CardDatabase: ResourceLoader.Load returned null for {filePath}");
+					continue;
+				}
+
+				var cardData = resource as CardData;
+				if (cardData == null)
+				{
+					GD.PrintErr($"CardDatabase: Resource is not CardData type for {filePath}, got {resource.GetType().Name}");
+					continue;
+				}
+
+				if (!string.IsNullOrEmpty(cardData.CardName))
+				{
+					if (!_cards.ContainsKey(cardData.CardName))
+					{
+						_cards[cardData.CardName] = cardData;
+						_allCards.Add(cardData);
+						loadedCount++;
+						GD.Print($"CardDatabase: Loaded '{cardData.CardName}' from {filePath}");
+					}
+					else
+					{
+						GD.Print($"CardDatabase: Duplicate card '{cardData.CardName}' skipped");
+					}
+				}
+				else
+				{
+					GD.PrintErr($"CardDatabase: CardData has no name from {filePath}");
+				}
+			}
+			else
+			{
+				GD.PrintErr($"CardDatabase: File does not exist: {filePath}");
+			}
+		}
+
+		GD.Print($"CardDatabase: Loaded {loadedCount} cards from manual list");
 	}
 
 	public CardData GetCard(string cardName)
@@ -178,4 +225,3 @@ public partial class CardDatabase : Node
 		return result;
 	}
 }
-

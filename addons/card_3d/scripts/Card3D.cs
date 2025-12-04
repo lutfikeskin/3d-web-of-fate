@@ -93,28 +93,13 @@ public partial class Card3D : Node3D
 
 	public void DraggingRotation(Vector3 dragRotation)
 	{
-		// Rotasyonu değiştirme (tamamen no-op)
-		return;
-	}
-	
-	public void StopAllTweens()
-	{
-		// Tüm aktif tween'leri durdur
-		if (_positionTween != null && _positionTween.IsValid())
-		{
-			_positionTween.Kill();
-			_positionTween = null;
-		}
 		if (_rotateTween != null && _rotateTween.IsValid())
 		{
 			_rotateTween.Kill();
-			_rotateTween = null;
 		}
-		if (_hoverTween != null && _hoverTween.IsValid())
-		{
-			_hoverTween.Kill();
-			_hoverTween = null;
-		}
+
+		_rotateTween = CreateTween();
+		TweenCardRotation(dragRotation, RotateTweenDuration);
 	}
 
 	public Tween AnimateToPosition(Vector3 newPosition, float duration = -1)
@@ -159,6 +144,13 @@ public partial class Card3D : Node3D
 	{
 		_rotateTween.SetEase(Tween.EaseType.In);
 		_rotateTween.TweenProperty(this, "rotation", targetRotation, duration);
+	}
+
+	public void StopAllTweens()
+	{
+		_positionTween?.Kill();
+		_rotateTween?.Kill();
+		_hoverTween?.Kill();
 	}
 
 	private void OnStaticBody3DMouseEntered()

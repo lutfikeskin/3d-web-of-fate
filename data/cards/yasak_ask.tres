@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/systems/cards/CardData.cs" id="1_carddata"]
+
+[resource]
+script = ExtResource("1_carddata")
+CardName = "Yasak Aşk"
+Tag = 3
+Category = 2
+BaseDP = 20
+BaseChaos = 10
+Description = "+20 DP, +10 Kaos."
+SynergyDescription = "Kıskanç Prens ile bağlıysa Romeo & Juliet kombosu: Kaos x2, DP x3."
+ArtPath = ""
+

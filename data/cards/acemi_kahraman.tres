@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=2 format=3 uid="uid://eu66csqhi57m"]
+
+[ext_resource type="Script" uid="uid://ctva4frq03db0" path="res://game/systems/cards/CardData.cs" id="1_carddata"]
+
+[resource]
+script = ExtResource("1_carddata")
+CardName = "Acemi Kahraman"
+Tag = 2
+BaseDP = 5
+BaseChaos = 2
+Description = "Başlangıç kartıdır. +5 DP ve düşük Kaos."
+SynergyDescription = "Efsanevi Kılıç ile bağlıysa Seçilmiş Kişiye dönüşür; DP +50, Kaos -10."

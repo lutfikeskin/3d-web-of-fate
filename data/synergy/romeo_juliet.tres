@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SynergyRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/systems/synergy/SynergyRule.cs" id="1_synergyrule"]
+
+[resource]
+script = ExtResource("1_synergyrule")
+type = 1
+rule_name = "Romeo & Juliet"
+required_cards = PackedStringArray("Yasak Aşk", "Kıskanç Prens")
+required_tag = 0
+required_tag_count = 0
+required_thread = 0
+bonus_dp = 0
+bonus_chaos = 0
+dp_multiplier = 3.0
+chaos_multiplier = 2.0
+description = "Yasak Aşk + Kıskanç Prens = Romeo & Juliet: DP x3, Kaos x2"
+

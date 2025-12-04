@@ -1,0 +1,85 @@
+{
+	"rules": [
+		{
+			"type": "tag_based",
+			"name": "Violence Duo",
+			"required_tag": "violence",
+			"required_tag_count": 2,
+			"bonus_dp": 5,
+			"bonus_chaos": 0,
+			"description": "2 Violence kartı yan yana: +5 DP"
+		},
+		{
+			"type": "tag_based",
+			"name": "Violence Trio",
+			"required_tag": "violence",
+			"required_tag_count": 3,
+			"bonus_dp": 15,
+			"bonus_chaos": 5,
+			"description": "3 Violence kartı yan yana: +15 DP, +5 Kaos"
+		},
+		{
+			"type": "tag_based",
+			"name": "Tragedy Pair",
+			"required_tag": "tragedy",
+			"required_tag_count": 2,
+			"bonus_dp": 10,
+			"bonus_chaos": 5,
+			"description": "2 Tragedy kartı yan yana: +10 DP, +5 Kaos"
+		},
+		{
+			"type": "tag_based",
+			"name": "Hope Circle",
+			"required_tag": "hope",
+			"required_tag_count": 2,
+			"bonus_dp": 3,
+			"bonus_chaos": -5,
+			"description": "2 Hope kartı yan yana: +3 DP, -5 Kaos"
+		},
+		{
+			"type": "tag_based",
+			"name": "Violence Tragedy Mix",
+			"required_tag": "violence",
+			"required_tag_count": 1,
+			"bonus_dp": 8,
+			"bonus_chaos": 3,
+			"description": "Violence + Tragedy kombinasyonu: +8 DP, +3 Kaos",
+			"requires_other_tag": "tragedy"
+		},
+		{
+			"type": "combo",
+			"name": "Seçilmiş Kişi",
+			"required_cards": ["Acemi Kahraman", "Efsanevi Kılıç"],
+			"bonus_dp": 50,
+			"bonus_chaos": -10,
+			"description": "Acemi Kahraman + Efsanevi Kılıç = Seçilmiş Kişi: +50 DP, -10 Kaos"
+		},
+		{
+			"type": "combo",
+			"name": "Romeo & Juliet",
+			"required_cards": ["Yasak Aşk", "Kıskanç Prens"],
+			"dp_multiplier": 3.0,
+			"chaos_multiplier": 2.0,
+			"description": "Yasak Aşk + Kıskanç Prens = Romeo & Juliet: DP x3, Kaos x2"
+		},
+		{
+			"type": "thread_based",
+			"name": "Blood Thread Violence",
+			"required_thread": "blood",
+			"required_tag": "violence",
+			"bonus_dp": 10,
+			"bonus_chaos": 5,
+			"description": "Violence kartı Kan İpliği'nde: +10 DP, +5 Kaos"
+		},
+		{
+			"type": "thread_based",
+			"name": "Blood Thread Tragedy",
+			"required_thread": "blood",
+			"required_tag": "tragedy",
+			"bonus_dp": 15,
+			"bonus_chaos": 8,
+			"description": "Tragedy kartı Kan İpliği'nde: +15 DP, +8 Kaos"
+		}
+	]
+}
+

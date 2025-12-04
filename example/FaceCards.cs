@@ -75,4 +75,3 @@ public partial class FaceCards : Resource
 		return allFaceCardData;
 	}
 }
-
