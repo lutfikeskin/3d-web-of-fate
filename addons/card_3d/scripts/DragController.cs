@@ -47,6 +47,10 @@ public partial class DragController : Node3D
 	private Card3D _draggingCard; // Card that is being dragged
 	private CardCollection3D _dragFromCollection; // Collection card being dragged from
 	private bool _dragging = false;
+	
+	// Public getters for external access
+	public bool IsDragging() => _dragging;
+	public Card3D GetDraggingCard() => _draggingCard;
 	private Vector2 _selectionStartMousePosition;
 	private Vector2 _currentMousePosition;
 	private CardCollection3D _hoveredCollection; // Collection about to drop card into

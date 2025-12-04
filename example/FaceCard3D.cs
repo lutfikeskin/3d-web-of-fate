@@ -90,4 +90,3 @@ public partial class FaceCard3D : Card3D
 		return Rank.ToString() + " of " + Suit.ToString();
 	}
 }
-

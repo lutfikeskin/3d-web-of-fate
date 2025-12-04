@@ -17,12 +17,31 @@ public partial class Table : Node3D
 	private int _rankIndex = 0;
 
 	private CardCollection3D _hand;
-	private CardCollection3D _pile;
+	private DragController _dragController;
+	private Array<CardSlot> _slots;
 
 	public override void _Ready()
 	{
 		_hand = GetNode<CardCollection3D>("DragController/Hand");
-		_pile = GetNode<CardCollection3D>("DragController/TableCards");
+		_dragController = GetNode<DragController>("DragController");
+		
+		// Slot'ları bul ve sinyallerini bağla
+		var slotsNode = GetNode<Node3D>("Slots");
+		_slots = new Array<CardSlot>();
+		
+		foreach (Node child in slotsNode.GetChildren())
+		{
+			if (child is CardSlot slot)
+			{
+				_slots.Add(slot);
+				slot.CardRemoved += OnSlotCardRemoved;
+			}
+		}
+		
+		// DragController sinyallerini bağla
+		_dragController.DragStopped += OnDragStopped;
+		_dragController.DragStarted += OnDragStarted;
+		_dragController.CardMoved += OnCardMoved;
 	}
 
 	public override void _Input(InputEvent @event)
@@ -41,18 +60,10 @@ public partial class Table : Node3D
 		}
 		else if (@event.IsActionPressed("ui_right"))
 		{
-			if (_pile.CardLayoutStrategy is PileCardLayout && _hand.CardLayoutStrategy is LineCardLayout)
-			{
-				var layout = new LineCardLayout();
-				_pile.CardLayoutStrategy = layout;
-			}
-			else if (_hand.CardLayoutStrategy is LineCardLayout)
+			// Layout değiştirme - sadece hand için
+			if (_hand.CardLayoutStrategy is LineCardLayout)
 			{
 				_hand.CardLayoutStrategy = new FanCardLayout();
-			}
-			else if (_pile.CardLayoutStrategy is LineCardLayout)
-			{
-				_pile.CardLayoutStrategy = new PileCardLayout();
 			}
 			else if (_hand.CardLayoutStrategy is FanCardLayout)
 			{
@@ -119,44 +130,32 @@ public partial class Table : Node3D
 		var randomCardIndex = random.Next(_hand.Cards.Count);
 		var cardToRemove = _hand.Cards[randomCardIndex];
 
-		PlayCard(cardToRemove);
+		// Kartı hand'den çıkar (artık otomatik slot'a yerleştirme yok)
+		_hand.RemoveCard(randomCardIndex);
+		cardToRemove.QueueFree();
 	}
 
-	private void PlayCard(Card3D card)
-	{
-		var cardIndex = _hand.CardIndicies[card];
-		var cardGlobalPosition = _hand.Cards[cardIndex].GlobalPosition;
-		var c = _hand.RemoveCard(cardIndex);
+	// PlayCard metodu kaldırıldı - kartlar sadece drag-and-drop ile slot'a yerleştirilebilir
 
-		_pile.AppendCard(c);
-		c.RemoveHovered();
-		c.GlobalPosition = cardGlobalPosition;
-	}
-
-	private void RetrieveCardFromTable(Card3D card)
-	{
-		var cardIndex = _pile.CardIndicies[card];
-		var cardGlobalPosition = _pile.Cards[cardIndex].GlobalPosition;
-		var c = _pile.RemoveCard(cardIndex);
-
-		_hand.AppendCard(c);
-		c.RemoveHovered();
-		c.GlobalPosition = cardGlobalPosition;
-	}
+	// Bu metod artık kullanılmıyor - slot'tan alma RetrieveCardFromSlot ile yapılıyor
 
 	private void ClearCards()
 	{
+		// Hand'deki kartları temizle
 		var handCards = _hand.RemoveAll();
-		var pileCards = _pile.RemoveAll();
-
 		foreach (var c in handCards)
 		{
 			c.QueueFree();
 		}
-
-		foreach (var c in pileCards)
+		
+		// Slot'lardaki kartları temizle
+		foreach (var slot in _slots)
 		{
-			c.QueueFree();
+			var card = slot.RemoveCard();
+			if (card != null)
+			{
+				card.QueueFree();
+			}
 		}
 	}
 
@@ -167,12 +166,226 @@ public partial class Table : Node3D
 
 	private void OnHandCardClicked(Card3D card)
 	{
-		PlayCard(card);
+		// Kart tıklama ile otomatik yerleştirme kaldırıldı
+		// Kartlar sadece drag-and-drop ile slot'a yerleştirilebilir
+		// Bu metod boş bırakıldı çünkü signal bağlantısı scene'de olabilir
 	}
 
-	private void OnTableCardsCardClicked(Card3D card)
+	// OnTableCardsCardClicked artık kullanılmıyor - slot'tan alma RetrieveCardFromSlot ile yapılıyor
+
+	private void OnDragStopped(Card3D card)
 	{
-		RetrieveCardFromTable(card);
+		// Highlight'ları temizle
+		ClearSlotHighlights();
+		
+		if (card == null || _slots == null || !card.IsInsideTree())
+		{
+			return;
+		}
+		
+		// Kart zaten bir slot'ta mı? (GetSlotWithCard, GetPlacedCard() == card kontrol eder)
+		// Eğer kart geri alındıysa, _placedCard null olur ve GetSlotWithCard null döner
+		var slotWithCard = GetSlotWithCard(card);
+		
+		// En yakın boş slot'u bul
+		CardSlot nearestSlot = null;
+		float nearestDistance = float.MaxValue;
+		float maxDropDistance = 5.0f; // Slot'a maksimum mesafe
+		
+		Vector3 cardGlobalPos = card.GlobalPosition;
+		
+		foreach (var slot in _slots)
+		{
+			// Sadece boş slot'ları kontrol et
+			// CanPlaceCard() hem IsOccupied (_placedCard == null) hem de card != null kontrol eder
+			if (!slot.CanPlaceCard(card))
+			{
+				continue; // Slot dolu veya kart null, atla
+			}
+			
+			float distance = slot.GlobalPosition.DistanceTo(cardGlobalPos);
+			if (distance < nearestDistance && distance < maxDropDistance)
+			{
+				nearestDistance = distance;
+				nearestSlot = slot;
+			}
+		}
+		
+		// Eğer yakın bir boş slot varsa, kartı oraya yerleştir
+		if (nearestSlot != null)
+		{
+			// Kart zaten başka bir slot'taysa, önce oradan çıkar
+			if (slotWithCard != null && slotWithCard != nearestSlot)
+			{
+				slotWithCard.RemoveCard();
+			}
+			
+			// Hand'den çıkar (eğer hand'deyse)
+			if (_hand != null && _hand.CardIndicies.ContainsKey(card))
+			{
+				var cardIndex = _hand.CardIndicies[card];
+				_hand.RemoveCard(cardIndex);
+			}
+			
+			// Slot'a yerleştir
+			nearestSlot.PlaceCard(card);
+		}
+		else if (slotWithCard != null)
+		{
+			// Slot'a yerleştirilemedi ve kart zaten bir slot'ta
+			// Kartı geri hand'e al (RetrieveCardFromSlot RemoveCard çağıracak, o da sinyal gönderecek)
+			RetrieveCardFromSlot(card);
+		}
+		// Eğer kart hand'deyse ve slot'a yerleştirilemediyse, hiçbir şey yapma (hand'de kalsın)
+	}
+
+	private CardSlot _highlightedSlot; // Şu anda highlight edilmiş slot
+	
+	private void OnDragStarted(Card3D card)
+	{
+		// Drag başladığında tüm slot highlight'larını temizle
+		ClearSlotHighlights();
+	}
+	
+	private void OnCardMoved(Card3D card, CardCollection3D fromCollection, CardCollection3D toCollection, int fromIndex, int toIndex)
+	{
+		// Kart hareket ettiğinde slot kontrolü yap
+	}
+	
+	public override void _Process(double delta)
+	{
+		// Drag sırasında sadece en yakın boş slot'u highlight et
+		if (_dragController != null && _dragController.IsDragging())
+		{
+			var draggingCard = _dragController.GetDraggingCard();
+			if (draggingCard != null && draggingCard.IsInsideTree() && _slots != null)
+			{
+				UpdateSlotHighlight(draggingCard);
+			}
+		}
+		else
+		{
+			// Drag yoksa tüm highlight'ları temizle
+			ClearSlotHighlights();
+		}
+	}
+	
+	private void UpdateSlotHighlight(Card3D card)
+	{
+		if (card == null || !card.IsInsideTree())
+		{
+			ClearSlotHighlights();
+			return;
+		}
+		
+		// ÖNCE: Tüm slot'ların highlight'ını kaldır
+		foreach (var slot in _slots)
+		{
+			slot.Highlight(false);
+		}
+		
+		// SONRA: Sadece en yakın boş slot'u bul ve highlight et
+		CardSlot nearestSlot = null;
+		float nearestDistance = float.MaxValue;
+		float maxDropDistance = 5.0f; // Slot'a maksimum mesafe
+		
+		Vector3 cardGlobalPos = card.GlobalPosition;
+		
+		foreach (var slot in _slots)
+		{
+			// Sadece boş slot'ları kontrol et
+			// CanPlaceCard() hem IsOccupied hem de card != null kontrol ediyor
+			if (!slot.CanPlaceCard(card))
+			{
+				continue; // Slot dolu veya kart null, atla
+			}
+			
+			float distance = slot.GlobalPosition.DistanceTo(cardGlobalPos);
+			if (distance < nearestDistance && distance < maxDropDistance)
+			{
+				nearestDistance = distance;
+				nearestSlot = slot;
+			}
+		}
+		
+		// Sadece en yakın boş slot'u highlight et
+		if (nearestSlot != null)
+		{
+			nearestSlot.Highlight(true);
+			_highlightedSlot = nearestSlot;
+		}
+		else
+		{
+			_highlightedSlot = null;
+		}
+	}
+	
+	private void ClearSlotHighlights()
+	{
+		if (_slots != null)
+		{
+			foreach (var slot in _slots)
+			{
+				slot.Highlight(false);
+			}
+		}
+		_highlightedSlot = null;
+	}
+
+	// TryPlaceCardInSlot metodu kaldırıldı - kartlar sadece drag-and-drop ile slot'a yerleştirilebilir
+	// Bu metod artık kullanılmıyor, sadece OnDragStopped içinde kart yerleştirme yapılıyor
+
+	private void RetrieveCardFromSlot(Card3D card)
+	{
+		var slotWithCard = GetSlotWithCard(card);
+		if (slotWithCard != null)
+		{
+			// RemoveCard zaten sinyal gönderecek ve OnSlotCardRemoved çağrılacak
+			// Bu yüzden burada sadece RemoveCard çağırmak yeterli
+			slotWithCard.RemoveCard();
+		}
+	}
+	
+	private CardSlot GetSlotWithCard(Card3D card)
+	{
+		foreach (var slot in _slots)
+		{
+			if (slot.GetPlacedCard() == card)
+			{
+				return slot;
+			}
+		}
+		return null;
+	}
+	
+	// Slot'tan kart kaldırıldığında çağrılır
+	private void OnSlotCardRemoved(Card3D card)
+	{
+		if (_hand == null || card == null)
+		{
+			return;
+		}
+		
+		// Kart zaten slot'tan çıkarılmış (RemoveCard içinde parent değişti ve _placedCard null yapıldı)
+		var currentParent = card.GetParent();
+		
+		// Eğer kartın parent'ı hand değilse, önce çıkar
+		if (currentParent != null && currentParent != _hand)
+		{
+			currentParent.RemoveChild(card);
+		}
+		
+		// Rotasyon kaldırıldı - kartlar hiçbir zaman rotate edilmeyecek
+		
+		// Kartı hand'e ekle (AppendCard içinde AddChild çağrılacak ve layout uygulanacak)
+		if (card.GetParent() != _hand)
+		{
+			_hand.AppendCard(card);
+		}
+		
+		card.RemoveHovered();
+		
+		// Slot'un state'i zaten RemoveCard() içinde resetlendi (_placedCard = null, Highlight(false))
+		// Bu yüzden slot artık boş ve tekrar kullanılabilir durumda
 	}
 }
-

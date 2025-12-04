@@ -93,13 +93,8 @@ public partial class Card3D : Node3D
 
 	public void DraggingRotation(Vector3 dragRotation)
 	{
-		if (_rotateTween != null && _rotateTween.IsValid())
-		{
-			_rotateTween.Kill();
-		}
-
-		_rotateTween = CreateTween();
-		TweenCardRotation(dragRotation, RotateTweenDuration);
+		// Rotasyonu değiştirme (tamamen no-op)
+		return;
 	}
 
 	public Tween AnimateToPosition(Vector3 newPosition, float duration = -1)
