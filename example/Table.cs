@@ -375,12 +375,17 @@ public partial class Table : Node3D
 			currentParent.RemoveChild(card);
 		}
 		
-		// Rotasyon kaldırıldı - kartlar hiçbir zaman rotate edilmeyecek
-		
 		// Kartı hand'e ekle (AppendCard içinde AddChild çağrılacak ve layout uygulanacak)
 		if (card.GetParent() != _hand)
 		{
 			_hand.AppendCard(card);
+		}
+		
+		// Hand'e döndükten sonra (artık tree'de) rotasyonu sıfırla
+		if (card.IsInsideTree())
+		{
+			card.Rotation = Vector3.Zero;
+			card.GlobalBasis = Basis.Identity;
 		}
 		
 		card.RemoveHovered();

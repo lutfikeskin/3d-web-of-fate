@@ -106,4 +106,3 @@ public partial class SlotManager : Node3D
 		return _slots;
 	}
 }
-

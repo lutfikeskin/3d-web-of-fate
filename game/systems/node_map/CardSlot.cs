@@ -199,8 +199,11 @@ public partial class CardSlot : Node3D
 		// Hedef pozisyonu local'a çevir
 		var targetLocalPosition = ToLocal(targetGlobalPosition);
 		
-		// Kartı slot'a animasyonlu olarak yerleştir (daha kısa ve az zıplayan)
-		card.AnimateToPosition(targetLocalPosition, 0.35f);
+		// Kartı slot'a animasyonlu olarak yerleştir (daha sakin, zıplamasız)
+		var tween = card.CreateTween();
+		tween.SetEase(Tween.EaseType.Out);
+		tween.SetTrans(Tween.TransitionType.Cubic);
+		tween.TweenProperty(card, "position", targetLocalPosition, 0.25f);
 		
 		// Kart state: bulunduğu slot bilgisini kart'a yaz
 		card.SetMeta("slot", this);
