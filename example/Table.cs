@@ -4,18 +4,9 @@ using System;
 
 public partial class Table : Node3D
 {
-	private FaceCards _cardDatabase = new FaceCards();
-	private FaceCards.Suit[] _suits = {
-		FaceCards.Suit.Club,
-		FaceCards.Suit.Spade,
-		FaceCards.Suit.Diamond,
-		FaceCards.Suit.Heart,
-	};
-	private int[] _ranks = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-
-	private int _suitIndex = 0;
-	private int _rankIndex = 0;
-
+	private CardDatabase _cardDatabase;
+	private GameState _gameState;
+	
 	private CardCollection3D _hand;
 	private DragController _dragController;
 	private Array<CardSlot> _slots;
@@ -24,6 +15,26 @@ public partial class Table : Node3D
 	{
 		_hand = GetNode<CardCollection3D>("DragController/Hand");
 		_dragController = GetNode<DragController>("DragController");
+		
+		// CardDatabase ve GameState'i bul veya oluştur
+		_cardDatabase = GetNodeOrNull<CardDatabase>("CardDatabase");
+		if (_cardDatabase == null)
+		{
+			_cardDatabase = new CardDatabase();
+			AddChild(_cardDatabase);
+			_cardDatabase.Name = "CardDatabase";
+		}
+		
+		_gameState = GetNodeOrNull<GameState>("GameState");
+		if (_gameState == null)
+		{
+			_gameState = new GameState();
+			AddChild(_gameState);
+			_gameState.Name = "GameState";
+		}
+		
+		// GameState'i grup olarak ekle (HUD için)
+		_gameState.AddToGroup("game_state");
 		
 		// Slot'ları bul ve sinyallerini bağla
 		var slotsNode = GetNode<Node3D>("Slots");
@@ -35,6 +46,7 @@ public partial class Table : Node3D
 			{
 				_slots.Add(slot);
 				slot.CardRemoved += OnSlotCardRemoved;
+				slot.CardPlaced += OnSlotCardPlaced;
 			}
 		}
 		
@@ -72,51 +84,73 @@ public partial class Table : Node3D
 		}
 	}
 
-	private FaceCard3D InstantiateFaceCard(FaceCards.Rank rank, FaceCards.Suit suit)
+	private Card3D InstantiateFateCard(CardData cardData)
 	{
-		var scene = GD.Load<PackedScene>("res://example/face_card_3d.tscn");
-		var faceCard3D = scene.Instantiate<FaceCard3D>();
-		var cardData = _cardDatabase.GetCardData(rank, suit);
-		faceCard3D.Rank = (FaceCards.Rank)(int)cardData["rank"].AsInt32();
-		faceCard3D.Suit = (FaceCards.Suit)(int)cardData["suit"].AsInt32();
-		faceCard3D.FrontMaterialPath = (string)cardData["front_material_path"];
-		faceCard3D.BackMaterialPath = (string)cardData["back_material_path"];
-
-		return faceCard3D;
+		if (cardData == null)
+		{
+			GD.PrintErr("CardData is null");
+			return null;
+		}
+		
+		// Card3D scene'ini yükle
+		var cardScene = GD.Load<PackedScene>("res://addons/card_3d/scenes/card_3d.tscn");
+		var card3D = cardScene.Instantiate<Card3D>();
+		
+		if (card3D == null)
+		{
+			GD.PrintErr($"Failed to instantiate Card3D for {cardData.CardName}");
+			return null;
+		}
+		
+		// CardData'yı meta olarak ekle (FateCard3D yerine Card3D kullanıyoruz)
+		// Resource'ları meta olarak eklerken Variant.From kullan
+		card3D.SetMeta("card_data", Variant.From(cardData));
+		card3D.Name = cardData.CardName;
+		
+		return card3D;
+	}
+	
+	// Card3D'den CardData'yı almak için helper method
+	private CardData GetCardData(Card3D card)
+	{
+		if (card == null || !card.HasMeta("card_data"))
+		{
+			return null;
+		}
+		var variant = card.GetMeta("card_data");
+		return variant.AsGodotObject() as CardData;
 	}
 
 	private void AddCard()
 	{
-		var data = NextCard();
-		var card = InstantiateFaceCard((FaceCards.Rank)(int)data["rank"].AsInt32(), (FaceCards.Suit)(int)data["suit"].AsInt32());
-		_hand.AppendCard(card);
-		var deck = GetNode<Node3D>("../Deck");
-		card.GlobalPosition = deck.GlobalPosition;
-	}
-
-	private Dictionary NextCard()
-	{
-		var suit = _suits[_suitIndex];
-		var rank = _ranks[_rankIndex];
-
-		_rankIndex += 1;
-
-		if (_rankIndex == _ranks.Length)
+		if (_cardDatabase == null)
 		{
-			_rankIndex = 0;
-			_suitIndex += 1;
+			GD.PrintErr("CardDatabase not initialized");
+			return;
 		}
-
-		if (_suitIndex == _suits.Length)
+		
+		// Rastgele bir kart seç
+		var allCards = _cardDatabase.GetAllCards();
+		if (allCards.Count == 0)
 		{
-			_suitIndex = 0;
+			GD.PrintErr("No cards in database");
+			return;
 		}
-
-		return new Dictionary
+		
+		var random = new Random();
+		var randomIndex = random.Next(allCards.Count);
+		var cardData = allCards[randomIndex];
+		
+		var card = InstantiateFateCard(cardData);
+		if (card != null)
 		{
-			{ "suit", (int)suit },
-			{ "rank", rank }
-		};
+			_hand.AppendCard(card);
+			var deck = GetNodeOrNull<Node3D>("../Deck");
+			if (deck != null)
+			{
+				card.GlobalPosition = deck.GlobalPosition;
+			}
+		}
 	}
 
 	private void RemoveCard()
@@ -229,6 +263,7 @@ public partial class Table : Node3D
 			}
 			
 			// Slot'a yerleştir - hand'den çıktıktan SONRA
+			// DP/Kaos güncellemesi OnSlotCardPlaced'de yapılacak
 			nearestSlot.PlaceCard(card);
 		}
 		else if (slotWithCard != null)
@@ -359,12 +394,58 @@ public partial class Table : Node3D
 		return null;
 	}
 	
+	// Slot'a kart yerleştirildiğinde çağrılır
+	private void OnSlotCardPlaced(Card3D card)
+	{
+		if (_gameState == null || card == null)
+		{
+			return;
+		}
+		
+		// CardData'yı meta'dan al
+		var cardData = GetCardData(card);
+		if (cardData != null)
+		{
+			
+			// Thread tipine göre Kaos hesaplama (MVP için sadece Gold thread Kaos'u sıfırlar)
+			int chaosValue = cardData.BaseChaos;
+			var slot = GetSlotWithCard(card);
+			if (slot != null && slot.Thread == CardSlot.ThreadType.Gold)
+			{
+				chaosValue = 0;  // Altın İplik Kaos üretmez
+			}
+			
+			_gameState.AddDP(cardData.BaseDP);
+			_gameState.AddChaos(chaosValue);
+			
+			GD.Print($"Card placed: {cardData.CardName} - DP: +{cardData.BaseDP}, Chaos: +{chaosValue}");
+		}
+	}
+	
 	// Slot'tan kart kaldırıldığında çağrılır
 	private void OnSlotCardRemoved(Card3D card)
 	{
 		if (_hand == null || card == null)
 		{
 			return;
+		}
+		
+		// DP/Kaos'u geri al (kart slot'tan çıkarıldığında)
+		// Not: Slot bilgisi metadata'dan silindiği için, MVP'de sadece base değerleri kullanıyoruz
+		// İleride slot referansını signal'a ekleyebiliriz
+		if (_gameState != null)
+		{
+			var cardData = GetCardData(card);
+			if (cardData != null)
+			{
+			
+			// MVP için basit: sadece base değerleri geri al
+			// Thread tipi kontrolü eklenebilir ama şimdilik base değerler yeterli
+				_gameState.RemoveDP(cardData.BaseDP);
+				_gameState.RemoveChaos(cardData.BaseChaos);
+				
+				GD.Print($"Card removed: {cardData.CardName} - DP: -{cardData.BaseDP}, Chaos: -{cardData.BaseChaos}");
+			}
 		}
 		
 		// Kart zaten slot'tan çıkarılmış (RemoveCard içinde parent değişti ve _placedCard null yapıldı)

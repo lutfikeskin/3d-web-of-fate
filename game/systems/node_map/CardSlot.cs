@@ -3,6 +3,14 @@ using Godot;
 [GlobalClass]
 public partial class CardSlot : Node3D
 {
+	public enum ThreadType
+	{
+		Silk,      // İpek İplik (Beyaz) - Standart bağlantı
+		Blood,      // Kan İpliği (Kırmızı) - Vahşet/Trajedi bonusu
+		Gold,       // Altın İplik (Sarı) - Kaos üretmez
+		Shadow      // Gölge İplik (Mor) - Etkileri kopyalar/tersine çevirir (metaprogression)
+	}
+
 	[Signal]
 	public delegate void CardPlacedEventHandler(Card3D card);
 	
@@ -10,6 +18,9 @@ public partial class CardSlot : Node3D
 	public delegate void CardRemovedEventHandler(Card3D card);
 
 	public bool IsOccupied => _placedCard != null;
+
+	[Export]
+	public ThreadType Thread { get; set; } = ThreadType.Silk;  // MVP için varsayılan İpek İplik
 
 	private Card3D _placedCard;
 	private MeshInstance3D _slotVisual;

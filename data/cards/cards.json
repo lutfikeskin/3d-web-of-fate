@@ -1,0 +1,77 @@
+{
+	"cards": [
+		{
+			"name": "Acemi Kahraman",
+			"tag": "hope",
+			"category": "character",
+			"dp": 5,
+			"chaos": 2,
+			"description": "Başlangıç kartıdır. +5 DP ve düşük Kaos.",
+			"synergy": "Efsanevi Kılıç ile bağlıysa Seçilmiş Kişiye dönüşür; DP +50, Kaos -10."
+		},
+		{
+			"name": "Yasak Aşk",
+			"tag": "tragedy",
+			"category": "event",
+			"dp": 20,
+			"chaos": 10,
+			"description": "+20 DP, +10 Kaos.",
+			"synergy": "Kıskanç Prens ile bağlıysa Romeo & Juliet kombosu: Kaos x2, DP x3."
+		},
+		{
+			"name": "Kanlı Baron",
+			"tag": "violence",
+			"category": "character",
+			"dp": 15,
+			"chaos": 15,
+			"description": "+15 DP, +15 Kaos.",
+			"synergy": "Köylü İsyanı ile bağlıysa Baron ölür; tüm Kaos sıfırlanır, DP bonusu +30."
+		},
+		{
+			"name": "Gizemli Rehber",
+			"tag": "mystic",
+			"category": "character",
+			"dp": 10,
+			"chaos": 0,
+			"description": "+10 DP. Bağlı olduğu kartın Kaos maliyetini siler.",
+			"synergy": "Yüksek Kaos üreten kartların yanına koymak için idealdir."
+		},
+		{
+			"name": "Efsanevi Kılıç",
+			"tag": "violence",
+			"category": "item",
+			"dp": 20,
+			"chaos": 5,
+			"description": "+20 DP, +5 Kaos.",
+			"synergy": "Acemi Kahraman ile bağlıysa Seçilmiş Kişi; Kırık Kalkan ile bağlıysa kılıç kırılır, Kaos +10."
+		},
+		{
+			"name": "Büyükanne Kurabiyesi",
+			"tag": "hope",
+			"category": "item",
+			"dp": 0,
+			"chaos": -20,
+			"description": "-20 Kaos; DP yoktur.",
+			"synergy": "Gerilimli anlarda Kaos'u sıfırlamak için kullanılır; Şehir Meydanı ile bağlıysa +10 DP bonus verir."
+		},
+		{
+			"name": "Karanlık Orman",
+			"tag": "violence",
+			"category": "location",
+			"dp": 0,
+			"chaos": 0,
+			"description": "İçine konan her Canavar kartı +5 ekstra DP verir.",
+			"synergy": "Canavar destesi oynayanlar için ideal."
+		},
+		{
+			"name": "Kızıl Ay",
+			"tag": "violence",
+			"category": "disaster",
+			"dp": 0,
+			"chaos": 30,
+			"description": "Tüm Vahşet kartlarının Kaos üretimini 2 katına çıkarır.",
+			"synergy": "Kurtadam ile bağlıysa kontrol edilemez güç yaratır; DP +150, Kaos +100."
+		}
+	]
+}
+

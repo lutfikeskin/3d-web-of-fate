@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://d1uvcisduvvj" path="res://addons/card_3d/scenes/card_collection_3d.tscn" id="3_pqjp5"]
 [ext_resource type="PackedScene" uid="uid://bjx4ugu14qx3w" path="res://example/face_card_3d.tscn" id="6_qtugc"]
 [ext_resource type="Script" uid="uid://bid8ltj2ks5hc" path="res://game/systems/node_map/CardSlot.cs" id="7_slot"]
+[ext_resource type="Script" path="res://example/GameHUD.cs" id="8_hud"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slot"]
 transparency = 1
@@ -155,6 +156,68 @@ BackMaterialPath = ""
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Deck"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.111376)
 mesh = SubResource("BoxMesh_g1lkx")
+
+[node name="GameHUD" type="Control" parent="."]
+mouse_filter = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("8_hud")
+GameStatePath = NodePath("Table/GameState")
+DPLabelPath = NodePath("VBoxContainer/DPContainer/DPLabel")
+ChaosLabelPath = NodePath("VBoxContainer/ChaosContainer/ChaosTitleContainer/ChaosLabel")
+ChaosBarPath = NodePath("VBoxContainer/ChaosContainer/ChaosBar")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GameHUD"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -120.0
+offset_right = 300.0
+offset_bottom = -20.0
+grow_vertical = 0
+
+[node name="DPContainer" type="HBoxContainer" parent="GameHUD/VBoxContainer"]
+layout_mode = 2
+
+[node name="DPTitle" type="Label" parent="GameHUD/VBoxContainer/DPContainer"]
+layout_mode = 2
+text = "DP:"
+theme_override_font_sizes/font_size = 24
+
+[node name="DPLabel" type="Label" parent="GameHUD/VBoxContainer/DPContainer"]
+layout_mode = 2
+text = "0"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+
+[node name="ChaosContainer" type="VBoxContainer" parent="GameHUD/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="ChaosTitleContainer" type="HBoxContainer" parent="GameHUD/VBoxContainer/ChaosContainer"]
+layout_mode = 2
+
+[node name="ChaosTitle" type="Label" parent="GameHUD/VBoxContainer/ChaosContainer/ChaosTitleContainer"]
+layout_mode = 2
+text = "Kaos:"
+theme_override_font_sizes/font_size = 20
+
+[node name="ChaosLabel" type="Label" parent="GameHUD/VBoxContainer/ChaosContainer/ChaosTitleContainer"]
+layout_mode = 2
+text = "0/100"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+
+[node name="ChaosBar" type="ProgressBar" parent="GameHUD/VBoxContainer/ChaosContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 30)
+max_value = 100.0
 
 [connection signal="CardClicked" from="Table/DragController/Hand" to="Table" method="OnHandCardClicked"]
 [connection signal="Card3DMouseUp" from="Deck" to="Table" method="OnFaceCard3DCard3DMouseUp"]
