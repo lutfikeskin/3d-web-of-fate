@@ -1,3 +1,22 @@
 ---
 alwaysApply: true
 ---
+
+This project is built with Godot 4.5 and uses C# exclusively in a 3D environment.
+
+All generated or edited code must:
+- Use Godot 4.5’s C# API exactly.
+- Use correct node classes (Node3D, MeshInstance3D, Control, etc.).
+- Use strong typing and typed node access: GetNode<T>("Path").
+- Use [Export] for inspector-exposed variables.
+- Use PackedScene.Instantiate() for spawning scenes.
+- Use ResourceLoader.Load<T>() when loading resources.
+
+Prohibited:
+- GDScript (unless explicitly requested).
+- Unity code or terminology.
+- transform.position or any non-Godot patterns.
+- 2D node types unless I ask for them.
+
+If anything is ambiguous, ask for clarification before generating code.
+

@@ -278,5 +278,96 @@ Godot 4.5 ve kart oyun framework’ü kullanarak 3B bir masa alanı tasarlanacak
 
 ## 10. Sonuç
 
-*Kaderin Ağları*, kart oyunlarının sinerji odaklı keyfini, roguelike’ın tekrar oynanabilirliğini ve puzzle stratejisinin zihinsel tatminini bir araya getirerek benzersiz bir deneyim sunar. Bu dokümanda anlatılan meta progression sistemleri sayesinde oyun, oyuncuyu adım adım yeni içeriklerle tanıştırır ve uzun vadeli hedefler sunar【856645375258190†L468-L523】. Godot 4.5’in kart oyun framework’ü ile 3B ortamda zengin bir kullanıcı deneyimi tasarlamak mümkündür【618850826405569†L55-L73】.  
+*Kaderin Ağları*, kart oyunlarının sinerji odaklı keyfini, roguelike'ın tekrar oynanabilirliğini ve puzzle stratejisinin zihinsel tatminini bir araya getirerek benzersiz bir deneyim sunar. Bu dokümanda anlatılan meta progression sistemleri sayesinde oyun, oyuncuyu adım adım yeni içeriklerle tanıştırır ve uzun vadeli hedefler sunar【856645375258190†L468-L523】. Godot 4.5'in kart oyun framework'ü ile 3B ortamda zengin bir kullanıcı deneyimi tasarlamak mümkündür【618850826405569†L55-L73】.  
 Oyuncuların kendi destanlarını dokudukları bu oyunda, her run yeni bir hikâye, yeni sinerjiler ve yeni risklerle dolu olacak; böylece **Kaderin Ağları** oyun dünyasında güçlü bir yer edinmeye adaydır.
+
+---
+
+## 11. Geliştirme Notları ve İlerleme Raporu
+
+### 11.1 Veri Yönetimi ve Resource Sistemi
+
+**Tarih:** Bugün (Güncel Oturum)
+
+**Yapılan Değişiklikler:**
+
+1. **JSON'dan Custom Resource Sistemine Geçiş:**
+   - `CardData`, `SynergyRule` ve `ThreadConfig` için JSON dosyalarından Godot'un custom Resource sistemine (`.tres` dosyaları) geçiş yapıldı
+   - Bu değişiklik, editor'de görsel düzenleme, type safety ve daha iyi entegrasyon sağlar
+   - `CardDatabase.cs` ve `SynergyResolver.cs` artık `Array<CardData>` ve `Array<SynergyRule>` export property'leri kullanıyor
+   - Otomatik yükleme mekanizması eklendi: Editor'de atanmamışsa, `data/cards` ve `data/synergy` klasörlerinden otomatik yükleme yapılıyor
+
+2. **Resource Dosyaları Oluşturuldu:**
+   - **Kartlar (8 adet):** `acemi_kahraman.tres`, `yasak_ask.tres`, `kanli_baron.tres`, `gizemli_rehber.tres`, `efsanevi_kilic.tres`, `buyukanne_kurabiyesi.tres`, `karanlik_orman.tres`, `kizil_ay.tres`
+   - **Sinerji Kuralları (9 adet):** `violence_duo.tres`, `violence_trio.tres`, `tragedy_pair.tres`, `hope_circle.tres`, `violence_tragedy_mix.tres`, `secilmis_kisi.tres`, `romeo_juliet.tres`, `blood_thread_violence.tres`, `blood_thread_tragedy.tres`
+   - **Thread Konfigürasyonları (4 adet):** `silk_thread.tres`, `blood_thread.tres`, `gold_thread.tres`, `shadow_thread.tres`
+
+3. **CardSlot ThreadConfig Entegrasyonu:**
+   - `CardSlot.cs`'e `ThreadConfiguration` property'si eklendi
+   - Thread tipine göre otomatik ThreadConfig yükleme mekanizması eklendi
+   - ThreadConfig'den renk bilgisi kullanılarak slot görselleştirmesi iyileştirildi
+
+### 11.2 Kart Görselleştirme ve UI
+
+**Yapılan Değişiklikler:**
+
+1. **CardInfoDisplay Sistemi:**
+   - Kartların üzerine bilgileri gösteren 3D text sistemi eklendi (`CardInfoDisplay.cs`)
+   - `Label3D` kullanılarak kart üzerinde şu bilgiler gösteriliyor:
+     - **Kart İsmi** (üstte, büyük - FontSize: 100)
+     - **DP Değeri** (sağ üst köşe, yeşil - FontSize: 80)
+     - **Kaos Değeri** (sol üst köşe, kırmızı - FontSize: 80)
+     - **Tag** (ismin altında, renkli - FontSize: 60)
+     - **Açıklama** (altta, küçük - FontSize: 50)
+   - Label3D'ler `Billboard` mode ile her zaman kameraya bakıyor
+   - `RenderPriority = 100` ile kartların önünde render ediliyor
+   - `NoDepthTest = true` ile her zaman görünür
+
+2. **Font ve Görünürlük İyileştirmeleri:**
+   - Font boyutları 5 kat artırıldı (okunabilirlik için)
+   - Outline boyutları orantılı olarak artırıldı
+   - PixelSize ayarlandı (0.005f)
+
+### 11.3 Teknik Düzeltmeler
+
+**Yapılan Düzeltmeler:**
+
+1. **Tween API Güncellemeleri:**
+   - Godot 4.5 C# API'sine uyum için `Tween.EaseType.EaseIn` → `Tween.EaseType.In`
+   - `Tween.EaseType.EaseOut` → `Tween.EaseType.Out` olarak güncellendi
+   - `Card3D.cs` içindeki tüm tween çağrıları düzeltildi
+
+2. **Card3D Metodları:**
+   - `StopAllTweens()` metodu eklendi (tüm aktif tween'leri durdurur)
+   - Bu metod, kartlar slot'a yerleştirilirken hand layout animasyonlarının müdahale etmesini önler
+
+3. **Hata Düzeltmeleri:**
+   - `GD.PrintWarn` → `GD.Print` (Godot 4.5'te `PrintWarn` yok)
+   - `ResourceLoader.Load()` kullanımı ile `.tres` dosyaları yükleme sorunları çözüldü
+   - Property isimleri PascalCase'e çevrildi (C# convention)
+
+### 11.4 Sistem Mimarisi
+
+**Mevcut Durum:**
+
+- **CardDatabase:** Custom Resource listesi ile kart yönetimi
+- **SynergyResolver:** Custom Resource listesi ile sinerji kural yönetimi
+- **CardSlot:** ThreadConfig entegrasyonu ile thread tipi yönetimi
+- **CardInfoDisplay:** Label3D tabanlı kart bilgi görselleştirme
+- **GameState:** DP ve Kaos yönetimi
+- **GameHUD:** DP ve Kaos UI gösterimi
+
+**Sonraki Adımlar (Öneriler):**
+
+1. Kart görselleri (art) eklenmesi
+2. Sinerji tetiklendiğinde görsel feedback (parlama, efektler)
+3. Kaos barı dolduğunda "Kırılma" animasyonu
+4. Kart hover efektlerinin iyileştirilmesi
+5. Ses efektleri entegrasyonu
+
+### 11.5 Notlar
+
+- Tüm `.tres` dosyaları `data/` klasörü altında organize edildi
+- Editor'de manuel atama yapılabilir, ancak otomatik yükleme de mevcut
+- Label3D'ler CardMesh'in child'ı olarak eklendi, CardMesh'in transform'una göre çalışıyor
+- Font boyutları kart boyutuna göre optimize edildi
