@@ -7,10 +7,16 @@ public partial class Table : Node3D
 	private CardDatabase _cardDatabase;
 	private GameState _gameState;
 	private SynergyResolver _synergyResolver;
+	private Deck _deck;
+	private TurnManager _turnManager;
 	
 	private CardCollection3D _hand;
 	private DragController _dragController;
 	private Array<CardSlot> _slots;
+
+	private const int CardsPerTurn = 5;
+	private const int HandLimit = 10;
+	private bool _placementEnabled = false;
 
 	public override void _Ready()
 	{
@@ -48,6 +54,25 @@ public partial class Table : Node3D
 			AddChild(_synergyResolver);
 			_synergyResolver.Name = "SynergyResolver";
 		}
+
+		// Deck sistemini bul veya oluştur
+		_deck = GetNodeOrNull<Deck>("DeckSystem");
+		if (_deck == null)
+		{
+			_deck = new Deck();
+			AddChild(_deck);
+			_deck.Name = "DeckSystem";
+		}
+
+		// TurnManager'ı bul veya oluştur
+		_turnManager = GetNodeOrNull<TurnManager>("TurnManager");
+		if (_turnManager == null)
+		{
+			_turnManager = new TurnManager();
+			AddChild(_turnManager);
+			_turnManager.Name = "TurnManager";
+		}
+		_turnManager.AddToGroup("turn_manager");
 		
 		// Slot'ları bul ve sinyallerini bağla
 		var slotsNode = GetNode<Node3D>("Slots");
@@ -70,6 +95,18 @@ public partial class Table : Node3D
 		
 		// CardDatabase'in yüklenmesini bekle
 		CallDeferred(MethodName.EnsureCardDatabaseReady);
+
+		// TurnManager sinyallerini bağla
+		if (_turnManager != null)
+		{
+			_turnManager.PhaseChanged += OnPhaseChanged;
+			_turnManager.TurnStarted += OnTurnStarted;
+			_turnManager.TurnEnded += OnTurnEnded;
+
+			// İlk faz durumunu senkronize et
+			OnPhaseChanged(_turnManager.CurrentPhase);
+			OnTurnStarted(_turnManager.TurnNumber);
+		}
 	}
 	
 	private void EnsureCardDatabaseReady()
@@ -85,6 +122,12 @@ public partial class Table : Node3D
 			else
 			{
 				GD.Print($"Table: CardDatabase ready with {allCards.Count} cards");
+
+				// Deck'i mevcut kartlarla başlat
+				if (_deck != null)
+				{
+					_deck.Reset(allCards);
+				}
 			}
 		}
 	}
@@ -203,23 +246,27 @@ public partial class Table : Node3D
 
 	private void AddCard()
 	{
-		if (_cardDatabase == null)
+		CardData cardData = null;
+
+		if (_deck != null)
 		{
-			GD.PrintErr("CardDatabase not initialized");
+			cardData = _deck.DrawCard();
+		}
+		else if (_cardDatabase != null)
+		{
+			var allCards = _cardDatabase.GetAllCards();
+			if (allCards.Count > 0)
+			{
+				var random = new Random();
+				cardData = allCards[random.Next(allCards.Count)];
+			}
+		}
+
+		if (cardData == null)
+		{
+			GD.PrintErr("AddCard: No card available to draw");
 			return;
 		}
-		
-		// Rastgele bir kart seç
-		var allCards = _cardDatabase.GetAllCards();
-		if (allCards.Count == 0)
-		{
-			GD.PrintErr("No cards in database");
-			return;
-		}
-		
-		var random = new Random();
-		var randomIndex = random.Next(allCards.Count);
-		var cardData = allCards[randomIndex];
 		
 		var card = InstantiateFateCard(cardData);
 		if (card != null)
@@ -326,7 +373,7 @@ public partial class Table : Node3D
 		}
 		
 		// Eğer yakın bir boş slot varsa, kartı oraya yerleştir
-		if (nearestSlot != null)
+		if (nearestSlot != null && _placementEnabled && _turnManager != null && _turnManager.CurrentPhase == TurnManager.TurnPhase.Placement)
 		{
 			// Kart zaten başka bir slot'taysa, önce oradan çıkar
 			if (slotWithCard != null && slotWithCard != nearestSlot)
@@ -371,7 +418,7 @@ public partial class Table : Node3D
 	public override void _Process(double delta)
 	{
 		// Drag sırasında sadece en yakın boş slot'u highlight et
-		if (_dragController != null && _dragController.IsDragging())
+		if (_dragController != null && _dragController.IsDragging() && _placementEnabled && _turnManager != null && _turnManager.CurrentPhase == TurnManager.TurnPhase.Placement)
 		{
 			var draggingCard = _dragController.GetDraggingCard();
 			if (draggingCard != null && draggingCard.IsInsideTree() && _slots != null)
@@ -477,76 +524,7 @@ public partial class Table : Node3D
 	// Slot'a kart yerleştirildiğinde çağrılır
 	private void OnSlotCardPlaced(Card3D card)
 	{
-		if (_gameState == null || card == null)
-		{
-			return;
-		}
-		
-		// CardData'yı meta'dan al
-		var cardData = GetCardData(card);
-		if (cardData == null)
-		{
-			return;
-		}
-		
-		var slot = GetSlotWithCard(card);
-		if (slot == null)
-		{
-			return;
-		}
-		
-		// Thread tipine göre Kaos hesaplama (MVP için sadece Gold thread Kaos'u sıfırlar)
-		int chaosValue = cardData.BaseChaos;
-		if (slot.Thread == CardSlot.ThreadType.Gold)
-		{
-			chaosValue = 0;  // Altın İplik Kaos üretmez
-		}
-		
-		// Temel DP/Kaos ekle
-		int baseDP = cardData.BaseDP;
-		_gameState.AddDP(baseDP);
-		_gameState.AddChaos(chaosValue);
-		
-		// Sinerji hesapla
-		if (_synergyResolver != null && _cardDatabase != null)
-		{
-			var synergyResult = _synergyResolver.CalculateSynergy(slot, _slots, _cardDatabase);
-			
-			if (synergyResult.TriggeredRules.Count > 0)
-			{
-				// Sinerji bonuslarını uygula
-				int synergyDP = synergyResult.BonusDP;
-				int synergyChaos = synergyResult.BonusChaos;
-				
-				// Çarpanları uygula (base değerlere)
-				int finalDP = Mathf.RoundToInt(baseDP * synergyResult.DPMultiplier) + synergyDP;
-				int finalChaos = Mathf.RoundToInt(chaosValue * synergyResult.ChaosMultiplier) + synergyChaos;
-				
-				// Farkı ekle (zaten base değerler eklendi, sadece bonus/çarpan farkını ekle)
-				int dpDifference = finalDP - baseDP;
-				int chaosDifference = finalChaos - chaosValue;
-				
-				if (dpDifference != 0)
-				{
-					_gameState.AddDP(dpDifference);
-				}
-				
-				if (chaosDifference != 0)
-				{
-					_gameState.AddChaos(chaosDifference);
-				}
-				
-				// Debug: Tetiklenen sinerjileri göster
-				GD.Print($"Synergy triggered for {cardData.CardName}:");
-				foreach (var rule in synergyResult.TriggeredRules)
-				{
-					GD.Print($"  - {rule.RuleName}: {rule.Description}");
-				}
-				GD.Print($"  Bonus: DP +{dpDifference}, Chaos +{chaosDifference}");
-			}
-		}
-		
-		GD.Print($"Card placed: {cardData.CardName} - DP: +{baseDP}, Chaos: +{chaosValue}");
+		// DP/Kaos hesaplamaları Resolution fazında yapılacak
 	}
 	
 	// Slot'tan kart kaldırıldığında çağrılır
@@ -555,24 +533,6 @@ public partial class Table : Node3D
 		if (_hand == null || card == null)
 		{
 			return;
-		}
-		
-		// DP/Kaos'u geri al (kart slot'tan çıkarıldığında)
-		// Not: Slot bilgisi metadata'dan silindiği için, MVP'de sadece base değerleri kullanıyoruz
-		// İleride slot referansını signal'a ekleyebiliriz
-		if (_gameState != null)
-		{
-			var cardData = GetCardData(card);
-			if (cardData != null)
-			{
-			
-			// MVP için basit: sadece base değerleri geri al
-			// Thread tipi kontrolü eklenebilir ama şimdilik base değerler yeterli
-				_gameState.RemoveDP(cardData.BaseDP);
-				_gameState.RemoveChaos(cardData.BaseChaos);
-				
-				GD.Print($"Card removed: {cardData.CardName} - DP: -{cardData.BaseDP}, Chaos: -{cardData.BaseChaos}");
-			}
 		}
 		
 		// Kart zaten slot'tan çıkarılmış (RemoveCard içinde parent değişti ve _placedCard null yapıldı)
@@ -605,5 +565,162 @@ public partial class Table : Node3D
 		
 		// Slot'un state'i zaten RemoveCard() içinde resetlendi (_placedCard = null, Highlight(false))
 		// Bu yüzden slot artık boş ve tekrar kullanılabilir durumda
+	}
+
+	// Faz yönetimi
+	private void OnPhaseChanged(TurnManager.TurnPhase newPhase)
+	{
+		switch (newPhase)
+		{
+			case TurnManager.TurnPhase.Preparation:
+				HandlePreparationPhase();
+				break;
+			case TurnManager.TurnPhase.Placement:
+				_placementEnabled = true;
+				break;
+			case TurnManager.TurnPhase.Resolution:
+				_placementEnabled = false;
+				HandleResolutionPhase();
+				break;
+			case TurnManager.TurnPhase.Cleanup:
+				_placementEnabled = false;
+				HandleCleanupPhase();
+				break;
+			case TurnManager.TurnPhase.GameOver:
+				_placementEnabled = false;
+				break;
+		}
+	}
+
+	private void OnTurnStarted(int turnNumber)
+	{
+		if (_gameState != null)
+		{
+			_gameState.CurrentTurn = turnNumber;
+		}
+	}
+
+	private void OnTurnEnded(int turnNumber)
+	{
+		// Şimdilik ek mantık yok; ileride run sonu vs.
+	}
+
+	private void HandlePreparationPhase()
+	{
+		if (_deck == null || _hand == null)
+		{
+			GD.PrintErr("Preparation phase: deck or hand missing");
+			return;
+		}
+
+		// El limitine kadar çek
+		int drawCount = Mathf.Max(0, HandLimit - _hand.Cards.Count);
+		drawCount = Mathf.Min(drawCount, CardsPerTurn);
+
+		if (drawCount > 0)
+		{
+			var drawn = _deck.DrawCards(drawCount);
+			foreach (var cardData in drawn)
+			{
+				var card = InstantiateFateCard(cardData);
+				if (card != null)
+				{
+					_hand.AppendCard(card);
+					var deckVisual = GetNodeOrNull<Node3D>("../Deck");
+					if (deckVisual != null)
+					{
+						card.GlobalPosition = deckVisual.GlobalPosition;
+					}
+				}
+			}
+		}
+
+		// Hazırlık bitti, Placement'a geç
+		_turnManager?.NextPhase();
+	}
+
+	private void HandleResolutionPhase()
+	{
+		if (_synergyResolver == null || _cardDatabase == null || _gameState == null)
+		{
+			_turnManager?.NextPhase();
+			return;
+		}
+
+		int totalDP = 0;
+		int totalChaos = 0;
+
+		foreach (var slot in _slots)
+		{
+			var card = slot.GetPlacedCard();
+			if (card == null)
+			{
+				continue;
+			}
+
+			var cardData = GetCardData(card);
+			if (cardData == null)
+			{
+				continue;
+			}
+
+			int baseDP = cardData.BaseDP;
+			int baseChaos = cardData.BaseChaos;
+
+			// Thread tipi etkisi (Altın Kaos'u sıfırlar)
+			if (slot.Thread == CardSlot.ThreadType.Gold)
+			{
+				baseChaos = 0;
+			}
+
+			// Sinerji
+			var synergyResult = _synergyResolver.CalculateSynergy(slot, _slots, _cardDatabase);
+
+			int finalDP = Mathf.RoundToInt(baseDP * synergyResult.DPMultiplier) + synergyResult.BonusDP;
+			int finalChaos = Mathf.RoundToInt(baseChaos * synergyResult.ChaosMultiplier) + synergyResult.BonusChaos;
+
+			totalDP += finalDP;
+			totalChaos += finalChaos;
+
+			if (synergyResult.TriggeredRules.Count > 0)
+			{
+				GD.Print($"Synergy triggered for {cardData.CardName}:");
+				foreach (var rule in synergyResult.TriggeredRules)
+				{
+					GD.Print($"  - {rule.RuleName}: {rule.Description}");
+				}
+				GD.Print($"  Result: DP +{finalDP}, Chaos +{finalChaos}");
+			}
+		}
+
+		if (totalDP != 0)
+		{
+			_gameState.AddDP(totalDP);
+		}
+		if (totalChaos != 0)
+		{
+			_gameState.AddChaos(totalChaos);
+		}
+
+		GD.Print($"Resolution Phase -> DP +{totalDP}, Chaos +{totalChaos}");
+
+		_turnManager?.NextPhase();
+	}
+
+	private void HandleCleanupPhase()
+	{
+		// Slot'lardaki kartları temizle (gelecekte discard'a alınabilir)
+		foreach (var slot in _slots)
+		{
+			var card = slot.RemoveCard();
+			if (card != null)
+			{
+				card.QueueFree();
+			}
+		}
+
+		// İsteğe bağlı: eldeki kartları sakla; şimdilik dokunmuyoruz
+
+		_turnManager?.NextPhase();
 	}
 }

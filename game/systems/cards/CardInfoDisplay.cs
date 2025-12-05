@@ -76,9 +76,12 @@ public partial class CardInfoDisplay : Node3D
 			_descriptionLabel.Name = "DescriptionLabel";
 			AddChild(_descriptionLabel);
 		}
-		ConfigureLabel(_descriptionLabel, new Vector3(0, -0.4f, 0.01f), 50, 15, Colors.White);
+		ConfigureLabel(_descriptionLabel, new Vector3(0, -0.35f, 0.01f), 50, 12, Colors.White);
 		_descriptionLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-		_descriptionLabel.Width = 0.4f; // Kart boyutuna göre
+		_descriptionLabel.HorizontalAlignment = HorizontalAlignment.Center;
+		_descriptionLabel.VerticalAlignment = VerticalAlignment.Top;
+		_descriptionLabel.Width = 1.2f; // Daha geniş alan: yatay dizilim
+		_descriptionLabel.PixelSize = 0.0035f; // Daha küçük piksel boyutu, ekrana taşmasın
 	}
 
 	private void ConfigureLabel(Label3D label, Vector3 position, int fontSize, int outlineSize, Color modulate)

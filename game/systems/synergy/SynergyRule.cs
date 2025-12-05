@@ -50,3 +50,5 @@ public partial class SynergyRule : Resource
 	}
 }
 
+
+

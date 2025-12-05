@@ -12,6 +12,9 @@ public partial class GameState : Node
 	[Signal]
 	public delegate void ChaosMaxedEventHandler();  // Kaos 100'e ulaştığında
 
+	[Signal]
+	public delegate void TurnChangedEventHandler(int newTurn);
+
 	private int _dp = 0;
 	[Export]
 	public int DP
@@ -50,6 +53,24 @@ public partial class GameState : Node
 		}
 	}
 
+	private int _currentTurn = 1;
+	[Export]
+	public int CurrentTurn
+	{
+		get => _currentTurn;
+		set
+		{
+			if (_currentTurn != value)
+			{
+				_currentTurn = value;
+				EmitSignal(SignalName.TurnChanged, _currentTurn);
+			}
+		}
+	}
+
+	[Export]
+	public int MaxTurns { get; set; } = 0; // 0 -> limitsiz
+
 	[Export]
 	public int StartingDP { get; set; } = 0;
 
@@ -65,6 +86,7 @@ public partial class GameState : Node
 	{
 		DP = StartingDP;
 		Chaos = StartingChaos;
+		CurrentTurn = 1;
 	}
 
 	public void AddDP(int amount)
@@ -92,4 +114,6 @@ public partial class GameState : Node
 		return Chaos >= 100;
 	}
 }
+
+
 

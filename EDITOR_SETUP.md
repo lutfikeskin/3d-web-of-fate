@@ -45,3 +45,5 @@
 
 Eğer editor'de manuel atama yapmazsan, sistem otomatik olarak `data/cards` ve `data/synergy` klasörlerindeki `.tres` dosyalarını yüklemeye çalışır. Ancak bu bazen çalışmayabilir, bu yüzden editor'de manuel atama önerilir.
 
+
+

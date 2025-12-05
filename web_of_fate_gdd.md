@@ -4,13 +4,13 @@
 
 Kaderin Ağları, oyuncunun "Örgücü" (The Weaver) olarak gerçekliği bir kader ağında dokuduğu benzersiz bir roguelike/deck‐building/puzzle oyunudur. Oyun, klasik kart savaşlarından farklı olarak **hikâye kurgusu** ve **mekânsal bulmaca çözümü** üzerine kurulur.  
 Amacımız, oyuncuyu hem yaratıcılığa teşvik eden hem de keşif hissi uyandıran bir deneyim sunmaktır. **Synerji** tasarımı bu tür oyunlarda keşif ve duygusal tatmin sağlar; birden fazla kartı birleştirmenin toplamından daha büyük etki yaratması oyuncunun keşfetme arzusunu canlı tutar【776939076369990†L180-L199】.  
-Bu doküman, mevcut konsepti inceleyerek hataları düzeltir, mekaniği geliştirir ve Godot 4.5 üzerinden 3B bir kart oyunu olarak hayata geçirmek için ayrıntılı yönergeler sunar.  
+Bu doküman, mevcut konsepti inceleyerek hataları düzeltir, mekaniği geliştirir ve Godot 4.5 üzerinden 2D bir kart oyunu olarak hayata geçirmek için ayrıntılı yönergeler sunar.  
 
 ## 1. Oyun Özeti
 
 - **İsim:** *Kaderin Ağları* (Web of Fate)  
 - **Tür:** Roguelike Deckbuilder / Puzzle Strateji  
-- **Platform:** PC (Windows, macOS, Linux), Mobil (iOS/Android) ve Tablet. Oyun Godot 4.5 ile geliştirilecek; framework, kartları 3B ortamda sergileyecek şekilde yapılandırılacaktır.  
+- **Platform:** PC (Windows, macOS, Linux), Mobil (iOS/Android) ve Tablet. Oyun Godot 4.5 ile geliştirilecek; framework, kartları 2D ortamda sergileyecek şekilde yapılandırılacaktır.  
 - **Tema:** Karanlık fantastik/kosmik mistik atmosfer, oyuncuyu sonsuz bir kader tezgâhında kozmik bir örümcek-tanrı konumuna yerleştirir.  
 - **Hedef Kitle:** 14 yaş ve üzeri strateji, kart oyunları ve hikâye odaklı oyun severler.  
 
@@ -224,21 +224,21 @@ Bu kartlar genellikle oyuncunun eline **zorla** gelir veya “lanet” olarak de
 - **Günlük Meydan Okuma:** Günlük olarak özel kart düzeni ve iplik yapılarını içeren leaderboard modudur.  
 - **Özel Desteler:** Oyuncu, meta progression’de açtığı kartlarla özel bir başlangıç destesi oluşturabilir ve arkadaşıyla veya AI ile karşılaşabilir (planlanabilir).  
 
-## 7. UI/UX ve 3B Tasarım
+## 7. UI/UX ve Tasarım
 
-Godot 4.5 ve kart oyun framework’ü kullanarak 3B bir masa alanı tasarlanacaktır.
+Godot 4.5 ve kart oyun framework’ü kullanarak 2D bir masa alanı tasarlanacaktır.
 
 ### 7.1 Kart ve Masa Tasarımı
 
 - **Kartlar:**  
-  - Kartlar **3B dikdörtgen** olarak modellenir; ön yüzünde sanat eseri, renk kodu, etiket ve etkiler yazılıdır.  
+  - Kartlar **2D dikdörtgen** olarak modellenir; ön yüzünde sanat eseri, renk kodu, etiket ve etkiler yazılıdır.  
   - Arka yüz tek tip “kader” teması taşır.  
   - Kartlar **drag & drop** ile düğümlere yerleştirilebilir. Godot’un kart framework’ü; kartlar arasında drag&drop, hedefleme okları ve gruplama gibi özellikleri destekler【618850826405569†L55-L73】.  
 - **Düğüm Haritası:**  
-  - Her düğüm, 3B heks/penta şeklinde (örümcek ağı motifinde) temsil edilir.  
+  - Her düğüm, heks/penta şeklinde (örümcek ağı motifinde) temsil edilir.  
   - Bağlantılar farklı renkte iplikler olarak görselleştirilir.  
   - Oyuncu, bağlantı üzerindeki rengi görerek hangi kartların uygun olduğunu anlayabilir.  
-- **Hand UI:** Kart elini 3B ortamda hafif kıvrılmış bir düzlemde gösterir; kart seçilince büyütülür (focus-in).  
+- **Hand UI:** Kart elini 2D ortamda hafif kıvrılmış bir düzlemde gösterir; kart seçilince büyütülür (focus-in).  
 - **Harita Önizleme:** Kehanet ve benzeri kartlar kullanıldığında, bir sonraki tur düğüm haritasının holografik önizlemesi ekranda gösterilir.  
 
 ### 7.2 Kullanıcı Deneyimi
@@ -258,7 +258,6 @@ Godot 4.5 ve kart oyun framework’ü kullanarak 3B bir masa alanı tasarlanacak
   - **GameManager:** Tur döngüsünü, Kaos/DP sayaçlarını ve run akışını yönetir.  
   - **MetaManager:** Meta progression, mağaza ve save sistemi.  
 - **Veri Tanımları:** Kartlar JSON formatında tanımlanır; böylece balancing işlemleri kolaylaşır (Godot framework’ün JSON kart tanımlama özelliği vardır【618850826405569†L67-L69】).  
-- **3B Ortam:** Masa alanı, stylized dark fantasy mekân olarak tasarlanır; kartlar 3B yerleştirilir. Kamera, fareyle çevrilebilir veya sabit olabilir.  
 
 ## 8. Sanat ve Ses Tasarımı
 
@@ -278,7 +277,7 @@ Godot 4.5 ve kart oyun framework’ü kullanarak 3B bir masa alanı tasarlanacak
 
 ## 10. Sonuç
 
-*Kaderin Ağları*, kart oyunlarının sinerji odaklı keyfini, roguelike'ın tekrar oynanabilirliğini ve puzzle stratejisinin zihinsel tatminini bir araya getirerek benzersiz bir deneyim sunar. Bu dokümanda anlatılan meta progression sistemleri sayesinde oyun, oyuncuyu adım adım yeni içeriklerle tanıştırır ve uzun vadeli hedefler sunar【856645375258190†L468-L523】. Godot 4.5'in kart oyun framework'ü ile 3B ortamda zengin bir kullanıcı deneyimi tasarlamak mümkündür【618850826405569†L55-L73】.  
+*Kaderin Ağları*, kart oyunlarının sinerji odaklı keyfini, roguelike'ın tekrar oynanabilirliğini ve puzzle stratejisinin zihinsel tatminini bir araya getirerek benzersiz bir deneyim sunar. Bu dokümanda anlatılan meta progression sistemleri sayesinde oyun, oyuncuyu adım adım yeni içeriklerle tanıştırır ve uzun vadeli hedefler sunar【856645375258190†L468-L523】. Godot 4.5'in kart oyun framework'ü ile 2D ortamda zengin bir kullanıcı deneyimi tasarlamak mümkündür【618850826405569†L55-L73】.  
 Oyuncuların kendi destanlarını dokudukları bu oyunda, her run yeni bir hikâye, yeni sinerjiler ve yeni risklerle dolu olacak; böylece **Kaderin Ağları** oyun dünyasında güçlü bir yer edinmeye adaydır.
 
 ---
@@ -287,87 +286,3 @@ Oyuncuların kendi destanlarını dokudukları bu oyunda, her run yeni bir hikâ
 
 ### 11.1 Veri Yönetimi ve Resource Sistemi
 
-**Tarih:** Bugün (Güncel Oturum)
-
-**Yapılan Değişiklikler:**
-
-1. **JSON'dan Custom Resource Sistemine Geçiş:**
-   - `CardData`, `SynergyRule` ve `ThreadConfig` için JSON dosyalarından Godot'un custom Resource sistemine (`.tres` dosyaları) geçiş yapıldı
-   - Bu değişiklik, editor'de görsel düzenleme, type safety ve daha iyi entegrasyon sağlar
-   - `CardDatabase.cs` ve `SynergyResolver.cs` artık `Array<CardData>` ve `Array<SynergyRule>` export property'leri kullanıyor
-   - Otomatik yükleme mekanizması eklendi: Editor'de atanmamışsa, `data/cards` ve `data/synergy` klasörlerinden otomatik yükleme yapılıyor
-
-2. **Resource Dosyaları Oluşturuldu:**
-   - **Kartlar (8 adet):** `acemi_kahraman.tres`, `yasak_ask.tres`, `kanli_baron.tres`, `gizemli_rehber.tres`, `efsanevi_kilic.tres`, `buyukanne_kurabiyesi.tres`, `karanlik_orman.tres`, `kizil_ay.tres`
-   - **Sinerji Kuralları (9 adet):** `violence_duo.tres`, `violence_trio.tres`, `tragedy_pair.tres`, `hope_circle.tres`, `violence_tragedy_mix.tres`, `secilmis_kisi.tres`, `romeo_juliet.tres`, `blood_thread_violence.tres`, `blood_thread_tragedy.tres`
-   - **Thread Konfigürasyonları (4 adet):** `silk_thread.tres`, `blood_thread.tres`, `gold_thread.tres`, `shadow_thread.tres`
-
-3. **CardSlot ThreadConfig Entegrasyonu:**
-   - `CardSlot.cs`'e `ThreadConfiguration` property'si eklendi
-   - Thread tipine göre otomatik ThreadConfig yükleme mekanizması eklendi
-   - ThreadConfig'den renk bilgisi kullanılarak slot görselleştirmesi iyileştirildi
-
-### 11.2 Kart Görselleştirme ve UI
-
-**Yapılan Değişiklikler:**
-
-1. **CardInfoDisplay Sistemi:**
-   - Kartların üzerine bilgileri gösteren 3D text sistemi eklendi (`CardInfoDisplay.cs`)
-   - `Label3D` kullanılarak kart üzerinde şu bilgiler gösteriliyor:
-     - **Kart İsmi** (üstte, büyük - FontSize: 100)
-     - **DP Değeri** (sağ üst köşe, yeşil - FontSize: 80)
-     - **Kaos Değeri** (sol üst köşe, kırmızı - FontSize: 80)
-     - **Tag** (ismin altında, renkli - FontSize: 60)
-     - **Açıklama** (altta, küçük - FontSize: 50)
-   - Label3D'ler `Billboard` mode ile her zaman kameraya bakıyor
-   - `RenderPriority = 100` ile kartların önünde render ediliyor
-   - `NoDepthTest = true` ile her zaman görünür
-
-2. **Font ve Görünürlük İyileştirmeleri:**
-   - Font boyutları 5 kat artırıldı (okunabilirlik için)
-   - Outline boyutları orantılı olarak artırıldı
-   - PixelSize ayarlandı (0.005f)
-
-### 11.3 Teknik Düzeltmeler
-
-**Yapılan Düzeltmeler:**
-
-1. **Tween API Güncellemeleri:**
-   - Godot 4.5 C# API'sine uyum için `Tween.EaseType.EaseIn` → `Tween.EaseType.In`
-   - `Tween.EaseType.EaseOut` → `Tween.EaseType.Out` olarak güncellendi
-   - `Card3D.cs` içindeki tüm tween çağrıları düzeltildi
-
-2. **Card3D Metodları:**
-   - `StopAllTweens()` metodu eklendi (tüm aktif tween'leri durdurur)
-   - Bu metod, kartlar slot'a yerleştirilirken hand layout animasyonlarının müdahale etmesini önler
-
-3. **Hata Düzeltmeleri:**
-   - `GD.PrintWarn` → `GD.Print` (Godot 4.5'te `PrintWarn` yok)
-   - `ResourceLoader.Load()` kullanımı ile `.tres` dosyaları yükleme sorunları çözüldü
-   - Property isimleri PascalCase'e çevrildi (C# convention)
-
-### 11.4 Sistem Mimarisi
-
-**Mevcut Durum:**
-
-- **CardDatabase:** Custom Resource listesi ile kart yönetimi
-- **SynergyResolver:** Custom Resource listesi ile sinerji kural yönetimi
-- **CardSlot:** ThreadConfig entegrasyonu ile thread tipi yönetimi
-- **CardInfoDisplay:** Label3D tabanlı kart bilgi görselleştirme
-- **GameState:** DP ve Kaos yönetimi
-- **GameHUD:** DP ve Kaos UI gösterimi
-
-**Sonraki Adımlar (Öneriler):**
-
-1. Kart görselleri (art) eklenmesi
-2. Sinerji tetiklendiğinde görsel feedback (parlama, efektler)
-3. Kaos barı dolduğunda "Kırılma" animasyonu
-4. Kart hover efektlerinin iyileştirilmesi
-5. Ses efektleri entegrasyonu
-
-### 11.5 Notlar
-
-- Tüm `.tres` dosyaları `data/` klasörü altında organize edildi
-- Editor'de manuel atama yapılabilir, ancak otomatik yükleme de mevcut
-- Label3D'ler CardMesh'in child'ı olarak eklendi, CardMesh'in transform'una göre çalışıyor
-- Font boyutları kart boyutuna göre optimize edildi
