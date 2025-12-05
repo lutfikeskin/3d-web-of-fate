@@ -47,3 +47,4 @@ Eğer editor'de manuel atama yapmazsan, sistem otomatik olarak `data/cards` ve `
 
 
 
+
