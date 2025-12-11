@@ -1,139 +1,150 @@
-# Kaderin Ağları (Web of Fate) – Genişletilmiş Oyun Tasarım Dokümanı
+# Kaderin Ağları (Web of Fate) – Master Tasarım Dokümanı (GDD) v3.0
 
-## Giriş
-
-Kaderin Ağları, oyuncunun "Örgücü" (The Weaver) olarak gerçekliği bir kader ağında dokuduğu benzersiz bir roguelike/deck‐building/puzzle oyunudur. Oyun, klasik kart savaşlarından farklı olarak **hikâye kurgusu** ve **mekânsal bulmaca çözümü** üzerine kurulur.  
-Amacımız, oyuncuyu hem yaratıcılığa teşvik eden hem de keşif hissi uyandıran bir deneyim sunmaktır. **Sinerji** tasarımı bu tür oyunlarda keşif ve duygusal tatmin sağlar; birden fazla kartı birleştirmenin toplamından daha büyük etki yaratması oyuncunun keşfetme arzusunu canlı tutar.
-
-Bu doküman, mevcut konsepti inceleyerek hataları düzeltir, mekaniği geliştirir ve Godot 4.5 üzerinden bir kart oyunu olarak hayata geçirmek için ayrıntılı yönergeler sunar.
-
-## 1. Oyun Özeti
-
-- **İsim:** *Kaderin Ağları* (Web of Fate)  
-- **Tür:** Roguelike Deckbuilder / Puzzle Strateji  
-- **Platform:** PC (Windows, macOS, Linux), Mobil (iOS/Android) ve Tablet. Oyun Godot 4.5 ile geliştirilecek; framework, kartları ortamda sergileyecek şekilde yapılandırılacaktır.  
-- **Tema:** Karanlık fantastik/kosmik mistik atmosfer, oyuncuyu sonsuz bir kader tezgâhında kozmik bir örümcek-tanrı konumuna yerleştirir.  
-- **Hedef Kitle:** 14 yaş ve üzeri strateji, kart oyunları ve hikâye odaklı oyun severler.  
-
-## 2. Tema ve Hikâye
-
-### 2.1 Arka Plan
-
-Evrenin dokusu, görünmeyen bir **kader ağı** tarafından tutulur. Bu ağın ustası **Örgücü**, her bir run’da destansı bir kahramanın kaderini şekillendirir.  
-
-- Oyuncu, Kozmik Örümcek veya Büyücü’nün avatarı olarak **Destan Kahramanı**nın hikâyesini kurgular.  
-- Bu kahraman, bilinmeyen bir dünyada yolculuk eder. Olaylar ve karakterler kader ağındaki düğümlere yerleştirilerek **kader iplikleri** üzerinde bağlanır.  
-- Hikâye dark fantasy öğeleri içerir; fırtına, trajedi, mistik eserler ve umuda dair parlayan anlar.  
-- Her run bir destan gibidir; sonuçta oyuncu, kaosun yönetilmesiyle kader ipliğini koparmadan mümkün olduğunca dramatik bir hikâye yazmaya çalışır.  
-
-### 2.2 Tematik Motifler
-
-- **Kozmik Mistik:** Lovecraft‐vari bilinmez güçler, yıldızların ötesinden gelen varlıklar, zaman döngüleri.  
-- **Karanlık Orta Çağ Fantastiği:** Kale, krallık, soylular, ejderha ve efsanevi eşyalar.  
-- **Dualite:** Umut ve karamsarlık, kaos ve düzen, trajedi ve kahramanlık.  
-
-## 3. Temel Mekanikler
-
-### 3.1 Kader Ağı (The Loom) ve Düğüm Haritası
-
-1. **Prosedürel Düğüm Haritası:** Oyuncunun önü, her tur rastgele üretilen bir *düğüm haritası* ile dolar. Harita; düğümler (slot’lar) ve **bağlantılar** (iplikler) içerir.  
-2. **Slot Sayısı:** Standart başlangıçta 5 düğüm bulunur.  
-3. **Bağlantı Türleri:**  
-   - **İpek İplik (Beyaz):** Standart bağlantı, normal puanlar verir.  
-   - **Kan İpliği (Kırmızı):** Buraya **Vahşet (Violence)** veya **Trajedi** kartları bağlanırsa ek DP (Destan Puanı) ve Kaos kazanılır.  
-   - **Altın İplik (Sarı):** Bu bağlantıya bağlanan kart Kaos üretmez.  
-   - **Gölge İplik (Mor – metaprogression ile açılır):** Kart etkilerini kopyalar veya tersine çevirir; risk/ödül mekaniği için kullanılır.  
-4. **Tıkanan Ağ (Sticky Web):** Kartlar oynandıktan sonra, eğer bir **sinerji** oluşturmamışlarsa masada kalırlar. Bu, slotları tıkar. Sadece başarılı sinerjiye giren kartlar masadan temizlenir. 
-5. **Kırılma ve Kopma:** Kaos barı 100'e ulaşırsa veya masadaki tüm slotlar dolup hamle yapılamaz hale gelirse iplikler kopar ve run sonlanır (Game Over).  
-
-### 3.2 Kartlar ve Etiketler
-
-Kartlar **Destan**ı oluşturan yapı taşlarıdır. Dört ana **etiket/tag** vardır:
-
-| Etiket | Renk/Kod | Tanım | Etki Eğilimi |
-|-------|---------|------|--------------|
-| **Vahşet (Violence)** | 🔴 | Dövüş, kan, çatışma, ölümcül risk. | Yüksek DP, yüksek Kaos |
-| **Mistik (Mystic)** | 🔵 | Büyü, lanetler, kehanetler, gizem. | Sinerji odaklı, Kaos etkilerini manipüle eder |
-| **Umut (Hope)** | 🟢 | İyileştirme, yardım, barış. | Kaos’u düşürür, düşük DP |
-| **Trajedi (Tragedy)** | 🟣 | İhanet, kayıp, dram. | Çok yüksek DP, yüksek Kaos risk |
-
-Kartlar **Karakterler**, **Eşyalar**, **Olaylar**, **Lokasyonlar** ve **Felaketler** olarak beş kategoriye ayrılır. Her kartın temel etkisi ve sinerji tetikleyen özel bir kombosu vardır.
-
-### 3.3 Kaynaklar
-
-| Kaynak | Açıklama |
-|-------|---------|
-| **Destan Puanı (DP / Legacy)** | Skor ve para birimidir. Kart oynamak, sinerji oluşturmak ve run sonu ödülleriyle kazanılır. DP, yeni kartlar, iplik türleri ve meta yükseltmeler satın almak için kullanılır. |
-| **Kaos (KP / Chaos)** | 0–100 arası çubuktur. Vahşet/Trajedi etkileri Kaos üretir. 100’ü aşarsa “Kırılma” olur ve run hemen biter. Amaç, Kaos’u kritik seviyede yönetmektir. |
-| **El Limiti** | Oyuncunun eli her tur başında 5 karta tamamlanır. Eldeki gereksiz kartları oynamak veya temizlemek stratejik önem taşır. |
-
-### 3.4 Oyun Döngüsü ve Akış (The Loop)
-
-Oyun, **Tek Buton Akışı** (Weave Fate) ile basitleştirilmiş stratejik bir döngüye sahiptir.
-
-#### 3.4.1 Tur Döngüsü (Micro Loop)
-
-1. **Hazırlık (Preparation):** 
-   - Oyuncunun eli 5 karta tamamlanır.
-   - Oyuncu elindeki kartları boş slotlara yerleştirir. 
-   - "Click-to-Place" veya "Drag & Drop" ile kartlar oynanır.
-   - Boş slotlar ve uygun hedefler görsel olarak vurgulanır (Highlight).
-
-2. **Kaderi Dokuma (Weave Fate):**
-   - Oyuncu "WEAVE FATE" butonuna basar.
-   - **Titreşim:** Ağ üzerindeki kartlar ve iplikler görsel/işitsel olarak tepki verir.
-   - **Hesaplama:** Kartların etkileri, iplik bonusları ve sinerjiler hesaplanır.
-   - **Hikâye:** Kart etkileşimlerine dayalı prosedürel bir hikâye parçası oluşturulur ve günlüğe yazılır.
-   - **Çözümleme (Resolution):** Sinerji oluşturan kartlar puan verip masadan kalkar (Discard). Sinerji oluşturmayanlar masada kalarak slotu tıkamaya devam eder.
-
-3. **Sonuç ve Kontrol:**
-   - Kaos 100 oldu mu? -> Game Over.
-   - 5 Slot da dolu ve hamle yok mu? -> Game Over.
-   - Değilse -> Bir sonraki tura geçilir (Tur sayısı artar, el yenilenir).
-
-#### 3.4.2 Run Döngüsü (Macro Loop)
-
-- Her run, oyuncu hayatta kalabildiği sürece devam eder (Sonsuz veya Bölüm Bazlı).
-- Run sonunda toplanan DP’den Meta Kredi üretilir ve **Kader Tezgâhı (Meta Shop)** üzerinden yükseltmeler satın alınır.  
-
-#### 3.4.3 Meta Döngü (Outside Run)
-
-- **Ascension Sistemi (Yükseliş):** Oyuncu oyunu tamamladıkça bir üst **Yükseliş Seviyesi** açılır.
-- **Kader Tezgâhı:** Oyun dışında DP/MK ile yatırımlar yapılır:  
-  - Yeni kart paketleri ve kart etiketleri açmak.  
-  - İplik türlerini yükseltmek.  
-
-### 3.5 Prosedürel Hikaye Sistemi
-
-Oyun, kartların etkileşimine göre dinamik metinler üretir.
-- **Sistem:** `StoryEngine`, masadaki kartları, etiketlerini ve iplik türlerini analiz eder.
-- **Örnek:**
-  - *Novice Hero* oynandı: "A novice hero begins their journey."
-  - *Bloody Baron* yanına kondu (Kırmızı İplik): "The Bloody Baron intercepts the hero on a path of blood!"
-  - *Sinerji Yok:* "The threads are tangled, fate is unclear."
-
-## 4. Teknik Uygulama Notları (Godot 4.5)
-
-### 4.1 Veri Yapıları (Custom Resources)
-Oyun tamamen veri odaklı (Data-Driven) tasarlanmıştır.
-- **CardData (.tres):** Kartın adı, görseli, etkileri, etiketleri.
-- **ThreadDefinition (.tres):** İplik rengi, kalınlığı, shader parametreleri.
-- **SynergyData (.tres):** Hangi kartların/etiketlerin birleşince ne yapacağı.
-- **NarrativeEvent (.tres):** Hikaye şablonları ve tetiklenme koşulları.
-
-### 4.2 Görsellik ve Shaderlar
-- **İplikler:** `ShaderMaterial` kullanan dinamik silindirler. `thread_pulse.gdshader` ile üzerinde enerji akışı ve parlama (emission) efekti vardır.
-- **Kartlar:** Mistik ortamda fiziksel varlığı olan nesneler.
-- **Slotlar:** Doluluk ve etkileşim durumuna göre renk değiştiren (Yeşil/Kırmızı/Beyaz) highlight mesh'leri.
-
-### 4.3 Kontrol
-- **Hibrit Kontrol:** Hem sürükle-bırak (Drag&Drop) hem de Tıkla-Yerleştir (Click-to-Place) desteklenir.
-
-## 5. Gelecek Planları
-
-- **Meta Shop:** DP harcayarak yeni kartların kilidini açma arayüzü.
-- **Ses Tasarımı:** Kart hareketleri, iplik titreşimleri ve atmosferik müzik.
-- **Daha Fazla İçerik:** 100+ Kart ve 50+ Sinerji kombinasyonu.
+Bu doküman, "Kaderin Ağları" oyununun temel mekaniklerini, veri yapısını ve teknik mimarisini tanımlar. Proje, hem 3D hem de 2D uygulamalara (Implementation) izin verecek şekilde **Veri Odaklı (Data-Driven)** ve **Mantık-Görünüm Ayrımı (Logic-View Separation)** prensipleriyle tasarlanmıştır.
 
 ---
-*Doküman Sürümü: 2.0 - Stratejik Revizyon Sonrası*
+
+## 1. Oyun Kimliği
+
+*   **İsim:** Kaderin Ağları (Web of Fate)
+*   **Tür:** Narrative Puzzle / Roguelike Deckbuilder
+*   **Motor:** Godot 4.5+ (GDScript)
+*   **Temel Vaat:** Oyuncu bir savaşçı değil, bir "Kader Örgücüsü"dür. Kartlar savaşmak için değil, hikayeyi ve kader ağını manipüle etmek için kullanılır.
+*   **Hook (Kanca):** "Sticky Web" (Yapışkan Ağ) mekaniği. Yanlış hamleler masada kalır ve yer kaplar. Sadece doğru hikayeler (sinerjiler) düğümleri çözer.
+
+---
+
+## 2. Oynanış Döngüsü (Core Loop)
+
+Oyun, **Tek Buton Akışı** (Weave Fate) üzerine kuruludur.
+
+### 2.1 Fazlar
+1.  **Hazırlık (Preparation):**
+    *   Oyuncu desteden elini 5 karta tamamlar.
+    *   Eldeki kartlar, masadaki (Loom) boş slotlara yerleştirilir.
+    *   *Strateji:* Hangi kartın hangi slotta olduğu, bağlandığı iplik rengine (Thread Type) ve komşu kartlara göre belirlenir.
+
+2.  **Örme (Weaving):**
+    *   Oyuncu "WEAVE FATE" butonuna basar.
+    *   Oyun duraksar ve hesaplama başlar.
+    *   **Story Engine** devreye girer: Kartların kombinasyonuna göre ekrana bir hikaye metni yazılır (örn: "Kahraman kılıcı buldu ama aşka yenik düştü.").
+
+3.  **Çözümleme (Resolution & Sticky Web):**
+    *   **Sinerji Kontrolü:** Bağlı slotlar kontrol edilir. Eğer geçerli bir sinerji varsa (örn: Hero + Sword), bu kartlar puan (DP) kazandırır ve **Masadan Kaldırılır (Discard)**.
+    *   **Tıkanma (Stuck):** Sinerji oluşturmayan kartlar **Masada Kalır**. Bu kartlar slotları işgal etmeye devam eder.
+    *   *Ceza:* Eğer tüm slotlar dolarsa ve sinerji yoksa veya Kaos limiti aşılırsa oyun biter.
+
+---
+
+## 3. Sistem Mimarisi (2D/3D Agnostik)
+
+Oyun mantığı, görünümden bağımsızdır. `GameManager` ve `LoomManager` 2D veya 3D düğümlerden haberdar değildir, sadece Veri (Data) ve ID'ler ile konuşur.
+
+### 3.1 Singletonlar (Autoloads)
+*   **`GameManager`**: Oyunun durumunu (State), Desteyi (Deck), Puanları (DP/Chaos) ve Fazları yönetir.
+*   **`LoomManager`**: Slotların mantıksal haritasını tutar. Hangi Slot ID'de hangi `CardData` var, hangi Slotlar birbirine bağlı bilgisini yönetir.
+
+### 3.2 Veri Yapıları (Custom Resources)
+Tüm oyun içeriği `.tres` dosyalarıdır. Kod değiştirmeden oyun dengesi değiştirilebilir.
+
+*   **`CardData`**:
+    *   `id`: String (Unique)
+    *   `display_name`: String
+    *   `category`: Enum (Character, Item, Event, Location)
+    *   `tags`: Array[String] (Violence, Mystic, Romance, Heroic)
+    *   `base_dp`: int
+    *   `base_chaos`: int
+    *   `texture_path`: String (Görsel yolu)
+
+*   **`SynergyData`**:
+    *   `required_cards`: Array[CardData] (Spesifik kart gereksinimi)
+    *   `required_tags`: Array[String] (Etiket gereksinimi)
+    *   `result_dp_bonus`: int
+    *   `result_chaos_change`: int
+    *   `is_valid`: bool (Slotu temizler mi?)
+
+*   **`NarrativeEvent`**:
+    *   `text_template`: String ("{card1} meets {card2}...")
+    *   `conditions`: Array[Resource] (Hangi kartlar/etiketler yan yana gelince bu hikaye çıkar?)
+    *   `priority`: int
+
+---
+
+## 4. Mevcut İçerik (Kartlar ve Sinerjiler)
+
+### 4.1 Uygulanmış Kartlar (Mevcut `CardData`)
+Şu anda sistemde tanımlı ve çalışan kartlar:
+
+| Kart Adı | Kategori | Etiketler | Temel Etki |
+| :--- | :--- | :--- | :--- |
+| **Novice Hero** | Character | `Heroic`, `Human` | +5 DP, -2 Chaos |
+| **Legendary Sword** | Item | `Weapon`, `Metal` | +10 DP, +5 Chaos |
+| **Bloody Baron** | Character | `Violence`, `Villain` | +15 DP, +15 Chaos |
+| **Forbidden Love** | Event | `Romance`, `Tragedy` | +20 DP, +10 Chaos |
+| **Mystic Guide** | Character | `Mystic`, `Support` | +5 DP, -5 Chaos |
+
+### 4.2 Örnek Sinerjiler
+*   **Hero's Journey:** `Novice Hero` + `Legendary Sword` -> Slotlar temizlenir, yüksek puan.
+*   **Tragic End:** `Forbidden Love` + `Bloody Baron` -> Yüksek Kaos, Trajik hikaye tetiklenir.
+
+---
+
+## 5. Proje Klasör Yapısı
+
+Bu yapı, hem 2D hem 3D için ortaktır. Görsel dosyalar (`scenes`) ayrışır.
+
+```text
+res://
+├── data/                       # TÜM OYUN VERİSİ (Logic)
+│   ├── cards/                  # CardData .tres dosyaları
+│   ├── synergies/              # SynergyData .tres dosyaları
+│   ├── narrative/              # NarrativeEvent .tres dosyaları
+│   └── threads/                # İplik tanımları
+├── logic/                      # OYUN MANTIĞI (Script Only)
+│   ├── game_manager.gd         # Autoload
+│   ├── loom_manager.gd         # Autoload
+│   ├── synergy_calculator.gd   # Helper class
+│   └── story_engine.gd         # Helper class
+├── resources/                  # RESOURCE SCRIPTS (Tanımlar)
+│   ├── card_data.gd
+│   ├── synergy_data.gd
+│   ├── narrative_event.gd
+│   └── ...
+├── scenes/                     # GÖRÜNÜM (View)
+│   ├── 3d/                     # 3D Versiyon Varlıkları
+│   │   ├── table_3d.tscn
+│   │   ├── card_3d.tscn
+│   │   ├── slot_3d.tscn
+│   │   └── thread_visualizer.gd
+│   ├── 2d/                     # 2D Versiyon Varlıkları (Planlanan)
+│   │   ├── table_2d.tscn
+│   │   ├── card_2d.tscn
+│   │   └── slot_2d.tscn
+│   └── ui/                     # Ortak UI
+│       └── hud.tscn
+└── assets/                     # Görseller, Sesler, Materyaller
+```
+
+---
+
+## 6. 2D ve 3D Entegrasyon Stratejisi
+
+Bu GDD'yi 2D projede kullanırken dikkat edilecekler:
+
+1.  **Logic Dosyaları Aynen Kalır:** `logic/` ve `resources/` klasörleri 2D projeye kopyala-yapıştır yapılabilir. Hiçbir değişiklik gerektirmez.
+2.  **Sinyal Yapısı:**
+    *   2D'de: `Slot2D` tıklandığında AYNI `LoomManager.card_placed` sinyalini yaymalıdır.
+3.  **Görselleştirme:**
+    *   2D'de `Line2D` nodu kullanılarak aynı mantık (Start Pos -> End Pos) ile iplikler çizilir.
+
+### Mevcut Durum Notları
+*   **Drag & Drop:** Şu anki `DragController` 3D Raycast kullanır. 2D versiyonu için Godot'un yerleşik `_get_drag_data` ve `_drop_data` fonksiyonları veya basit bir `Area2D` mouse takibi kullanılmalıdır.
+*   **Highlight:** 2D'de `modulate` değeri veya bir `Shader` kullanılabilir.
+
+---
+
+## 7. Hedefler (Roadmap)
+
+1.  **Narrative Genişlemesi:** 50+ Hikaye parçası eklemek.
+2.  **Görsel Cila:**
+    *   2D için: Pixel art veya vektörel UI tasarımı.
