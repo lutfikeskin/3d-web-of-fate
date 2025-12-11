@@ -11,7 +11,7 @@ Bu doküman, mevcut konsepti inceleyerek hataları düzeltir, mekaniği gelişti
 
 - **İsim:** *Kaderin Ağları* (Web of Fate)  
 - **Tür:** Roguelike Deckbuilder / Puzzle Strateji  
-- **Platform:** PC (Windows, macOS, Linux), Mobil (iOS/Android) ve Tablet. Oyun Godot 4.5 ile geliştirilecek; framework, kartları 3D ortamda sergileyecek şekilde yapılandırılacaktır.  
+- **Platform:** PC (Windows, macOS, Linux), Mobil (iOS/Android) ve Tablet. Oyun Godot 4.5 ile geliştirilecek; framework, kartları ortamda sergileyecek şekilde yapılandırılacaktır.  
 - **Tema:** Karanlık fantastik/kosmik mistik atmosfer, oyuncuyu sonsuz bir kader tezgâhında kozmik bir örümcek-tanrı konumuna yerleştirir.  
 - **Hedef Kitle:** 14 yaş ve üzeri strateji, kart oyunları ve hikâye odaklı oyun severler.  
 
@@ -123,12 +123,11 @@ Oyun tamamen veri odaklı (Data-Driven) tasarlanmıştır.
 
 ### 4.2 Görsellik ve Shaderlar
 - **İplikler:** `ShaderMaterial` kullanan dinamik silindirler. `thread_pulse.gdshader` ile üzerinde enerji akışı ve parlama (emission) efekti vardır.
-- **Kartlar:** 3D ortamda fiziksel varlığı olan nesneler.
+- **Kartlar:** Mistik ortamda fiziksel varlığı olan nesneler.
 - **Slotlar:** Doluluk ve etkileşim durumuna göre renk değiştiren (Yeşil/Kırmızı/Beyaz) highlight mesh'leri.
 
 ### 4.3 Kontrol
 - **Hibrit Kontrol:** Hem sürükle-bırak (Drag&Drop) hem de Tıkla-Yerleştir (Click-to-Place) desteklenir.
-- **Raycasting:** 3D dünyada mouse pozisyonunu algılamak için dinamik düzlem (Plane) kesişimi kullanılır.
 
 ## 5. Gelecek Planları
 
